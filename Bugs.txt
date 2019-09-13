@@ -1,0 +1,58 @@
+General
+-Clear selected variables
+-Title Bar
+-Kill animation on back
+	-Done... pause and clear svg (not canvas tho)
+
+Single Numerical
+-NA counting as 0 (height, CaS)
+	-Deleted rows with invalid values in any column used.
+-Show Axis on variable selection
+	-Done, doesnt change when stat changes
+-Show box-whisker plot on var select
+	-Done, no whiskers yet
+-Dotted line to base for pop stat
+	-Done, clean up
+-Label for pop stat
+	-Done, clean up
+-1 Sample stat mark ghost too early
+	-Done!
+-1 Sample drop too slow
+	-partial
+-5 Sample stat mark ghost
+	-Done!
+-20 Sample Missing
+	-Done!
+-1 Dist too slow
+	-partial
+-5 Dist skip pick and drop
+	-Partial
+-? Show Theoretical Distribution
+
+
+Numerical Diff
+-NA counting as 0 (height-Gender, CaS)
+	-Done, some errors may remain
+-Color Population
+	-Done!
+-Title below data points
+-Show population statistic on bottom plot
+-SHow 0 on bottom plot
+-Same bugs as single numerical
+
+
+
+Single Cat
+-Show axis on select
+-Level of Interest instead of focus
+-Animation for pick
+-Animation for drop
+-1 sample speed up
+
+Bootstrap
+-Animations
+
+
+Many differences:
+	If 0 are chosen from that category, counts as 0 for proportion rather than not being counted. Still draws bar and arrow
+
