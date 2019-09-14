@@ -258,3 +258,33 @@ input[type="range"]::-webkit-slider-thumb {
     /* height: 33%; */
   }
 
+  .factor-label{
+    font-weight: 700;
+    font-size: 1.5vmin;
+  }
+  .section-label{
+    font-weight: 700;
+    font-size: 2vmin;
+  }
+  text {
+    font-size: 1vmin;
+  }
+  line{
+    stroke: black;
+    stroke-width: 2px;
+  }
+
+  .boxplot-line {
+    stroke-opacity: 0.5;
+    stroke: grey;
+  }
+
+  .datapoint {
+    fill: grey;
+    stroke: black;
+    fill-opacity: 0.7;
+  }
+
+  .arrow{
+    stroke: rgb(202, 20, 22);
+  }

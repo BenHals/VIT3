@@ -165,7 +165,8 @@ const controller = {
         view.loadDataDisplay(ds);
         view.loadCanvas();
         fc_showContinue();
-        vis.init();
+        const vis_area = document.querySelector('#visualisation');
+        vis.init(vis_area.clientWidth, vis_area.clientHeight);
         vis.initModule(model.selected_module, model.getOptions());
         vis.initDimensions(model.dimensions, model.getSampleDimensions());
         vis.initOptions(model.getOptions());
@@ -205,9 +206,13 @@ const controller = {
         user_changed_options[o.name] = new_val;
         console.log(user_changed_options);
         updateUrl('options', JSON.stringify(user_changed_options));
+        vis.initOptions(model.getOptions());
+        let ds = model.populationDataset();
+        vis.initPopulation(ds);
 
     },
     takeSamples: async function() {
+        return;
         let required_options = model.selected_module.options;
         let is_valid = true;
         for(let o in required_options){

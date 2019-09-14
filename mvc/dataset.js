@@ -88,16 +88,122 @@ function createDataset(data, dimensions, statistics_generator){
     return dataset;
 }
 
-function runStatGens(datapoints, functions){
+function createDatasetMinimal(data, dimensions, statistics_generator, statanalysis_generator){
+    let dataset = {};
+    dataset.all = [];
+    for(let r = 0; r < data.length; r++){
+        let row = data[r];
+        dataset.all.push(row);
+    }
+
+    dataset.statistics = {};
+    dataset.statistics.overall = {};
+    dataset.statistics.factor_1 = {};
+    dataset.statistics.factor_2 = {};
+    dataset.statistics.overall.point_stats = {};
+    dataset.statistics.overall.point_stats = runStatGens(dataset.all, dataset.all, dataset.all, statistics_generator.overall);
+    dataset.statistics.both = {};
+    dimensions.forEach((dim, i) => {
+        let own_factors = dim.factors;
+        own_factors.forEach((own_fac)=>{
+            let filter_data = dataset.all.filter(el => own_fac == "" ? true : el[dim.name] == own_fac);
+            dataset.statistics[`factor_${i+1}`][own_fac] = {};
+            dataset.statistics[`factor_${i+1}`][own_fac].point_stats = runStatGens(filter_data, dataset.all, dataset.all, statistics_generator[`fac${i+1}`]);
+            dimensions.forEach(dimSec => {
+                if(dim == dimSec) return;
+                let sec_factors = dimSec.factors;
+                sec_factors.forEach((sec_fac)=>{
+                    if (!dataset.statistics.both[sec_fac]) dataset.statistics.both[sec_fac] = {};
+                    let combo_data = filter_data.filter(el => sec_fac == "" ? true : el[dimSec.name] == sec_fac);
+                    dataset.statistics.both[sec_fac][own_fac] = {};
+                    dataset.statistics.both[sec_fac][own_fac].point_stats = runStatGens(combo_data, filter_data, dataset.all, statistics_generator['both']);
+                });
+            });
+        });
+    });
+
+    dataset.statistics.overall.analysis = {};
+    for(stat in dataset.statistics.overall.point_stats){
+        dataset.statistics.overall.analysis[`${stat}`] = runStatAnalysisGens(dataset.all, dataset.all, dataset.all, dataset.statistics.overall, dataset.statistics, stat, statanalysis_generator.overall);
+    }
+    dimensions.forEach((dim, i) => {
+        let own_factors = dim.factors;
+        own_factors.forEach((own_fac)=>{
+            let filter_data = dataset.all.filter(el => own_fac == "" ? true : el[dim.name] == own_fac);
+            dataset.statistics[`factor_${i+1}`][own_fac].analysis = {};
+            for(stat in dataset.statistics[`factor_${i+1}`][own_fac].point_stats){
+                dataset.statistics[`factor_${i+1}`][own_fac].analysis[`${stat}`] = runStatAnalysisGens(filter_data, dataset.all, dataset.all, dataset.statistics[`factor_${i+1}`][own_fac], dataset.statistics, stat, statanalysis_generator[`fac${i+1}`]);
+            }
+            dimensions.forEach(dimSec => {
+                if(dim == dimSec) return;
+                let sec_factors = dimSec.factors;
+                sec_factors.forEach((sec_fac)=>{
+                    let combo_data = filter_data.filter(el => sec_fac == "" ? true : el[dimSec.name] == sec_fac);
+                    dataset.statistics.both[sec_fac][own_fac].analysis = {};
+                    for(stat in dataset.statistics.both[sec_fac][own_fac].point_stats){
+                        dataset.statistics.both[sec_fac][own_fac].analysis[`${stat}`] = runStatAnalysisGens(combo_data, filter_data, dataset.all, dataset.statistics.both[sec_fac][own_fac], dataset.statistics, stat, statanalysis_generator['both']);
+                    }
+                });
+            });
+        });
+    });
+    return dataset;
+}
+
+
+function runStatGens(datapoints, group_datapoints, all_datapoints, functions){
     let stats = {};
     for(let f in functions){
-        stats[functions[f][0]] = functions[f][1](datapoints);
+        stats[functions[f][0]] = functions[f][1](datapoints, group_datapoints, all_datapoints);
+    }
+    return stats;
+}
+function runStatAnalysisGens(datapoints, group_datapoints, all_datapoints, group_stats, overall_stats, stat_name, functions){
+    let stats = {};
+    for(let f in functions){
+        stats[functions[f][0]] = functions[f][1](datapoints, group_datapoints, all_datapoints, group_stats, overall_stats, stat_name);
     }
     return stats;
 }
 
+function pointValueAnalysis(stat_name){
+    return [stat_name, function(dp, group, total, group_stats, overall_stats, stat_name){
+        return group_stats.point_stats[stat_name];
+    }];
+}
+function deviationAnalysis(stat_name, dim_name){
+    return [stat_name, function(dp, group, total, group_stats, overall_stats, stat_name){
+        const overall_stat = overall_stats.overall.point_stats[stat_name];
+        const self_stat = group_stats.point_stats[stat_name];
+        return Math.abs(self_stat - overall_stat);
+    }];
+}
+function avDevAnalysis(stat_name, dim_name, factors){
+    return [stat_name, function(dp, group, total, group_stats, overall_stats, stat_name){
+        const overall_stat = overall_stats.overall.point_stats[stat_name];
+        let avg = 0;
+        for(let f = 0; f < factors.length; f++){
+            const factor_stat = overall_stats.factor_2[factors[f]].point_stats[stat_name];
+            avg += Math.abs(factor_stat - overall_stat);
+        }
+        return avg / factors.length;
+    }];
+}
+function differenceAnalysis(stat_name, dim_name, factors){
+    return [stat_name, function(dp, group, total, group_stats, overall_stats, stat_name){
+        if(factors.length < 2) return 0;
+        const factor_1_stat = overall_stats.factor_2[factors[0]].point_stats[stat_name];
+        const factor_2_stat = overall_stats.factor_2[factors[1]].point_stats[stat_name];
+        return factor_2_stat - factor_1_stat;
+    }];
+}
+
+function fStatAnalysis(stat_name, dim_name, factors){
+    return avDevAnalysis(stat_name, dim_name, factors);
+}
+
 function meanGen(stat_name, dim_name){
-    return [stat_name, function(dp){
+    return [stat_name, function(dp, group, total){
         dp = dp || [];
         if(dp.length < 1) return 0;
         let sum = dp.reduce((a, c)=>{return a+parseFloat(c[dim_name]) || 0}, 0);
@@ -106,7 +212,7 @@ function meanGen(stat_name, dim_name){
     }];
 }
 function stdGen(stat_name, dim_name, focus){
-    return [stat_name, function(dp){
+    return [stat_name, function(dp, group, total){
         dp = dp || [];
         if(dp.length < 1) return 0;
         let values = dp.map(function(c){
@@ -123,7 +229,7 @@ function stdGen(stat_name, dim_name, focus){
     }];
 }
 function medianGen(stat_name, dim_name){
-    return [stat_name, function(dp){
+    return [stat_name, function(dp, group, total){
         if (dp.length < 1) return 0;
         let sorted = dp.sort((a, b)=> a[dim_name] - b[dim_name]);
         let mid_ceil = sorted[Math.floor((dp.length - 1) / 2)];
@@ -136,8 +242,24 @@ function medianGen(stat_name, dim_name){
         return (mid_ceil[dim_name] + mid_floor[dim_name])/2;
     }];
 }
+function maxGen(stat_name, dim_name, proportion){
+    return [stat_name, function(dp, group, total){
+        if(proportion) return 1;
+        if (dp.length < 1) return 0;
+        let sorted = dp.sort((a, b)=> a[dim_name] - b[dim_name]);
+        return (sorted[sorted.length - 1][dim_name]);
+    }];
+}
+function minGen(stat_name, dim_name, proportion){
+    return [stat_name, function(dp, group, total){
+        if(proportion) return 0;
+        if (dp.length < 1) return 0;
+        let sorted = dp.sort((a, b)=> a[dim_name] - b[dim_name]);
+        return (sorted[0][dim_name]);
+    }];
+}
 function lqGen(stat_name, dim_name){
-    return [stat_name, function(dp){
+    return [stat_name, function(dp, group, total){
         if (dp.length < 1) return 0;
         let sorted = dp.sort((a, b)=> a[dim_name] - b[dim_name]);
         let mid_ceil = sorted[Math.floor((dp.length - 1) / 4)];
@@ -151,7 +273,7 @@ function lqGen(stat_name, dim_name){
     }];
 }
 function uqGen(stat_name, dim_name){
-    return [stat_name, function(dp){
+    return [stat_name, function(dp, group, total){
         if (dp.length < 1) return 0;
         let sorted = dp.sort((a, b)=> a[dim_name] - b[dim_name]);
         let mid_ceil = sorted[Math.floor(((dp.length - 1) / 4) * 3)];
@@ -164,36 +286,21 @@ function uqGen(stat_name, dim_name){
         return (mid_ceil[dim_name] + mid_floor[dim_name])/2;
     }];
 }
-function propGen(stat_name, dim_name, focus, total){
-    return [stat_name, function(dp){
-        if(dp.length == 0) return 0;
-        return (dp && dp.length > 1) ? dp.reduce((a, c) => c[dim_name] == focus ? a + 1 : a, 0) / dp.length : dp[0][dim_name] == focus;
+function propGen(stat_name){
+    return [stat_name, function(dp, group, total){
+        if(total == 0) return 0;
+        return dp.length / group.length || 0;
     }];
 }
-
-function avDev(stat_name, dim_name, dim_name2, factors, mid_stat){
-    return [stat_name, function(dp){
-        let mean = mid_stat(dp);
-        let avg = 0;
-        for(let f = 0; f < factors.length; f++){
-            let set_of_factors = dp.filter((e)=>e[dim_name2] == factors[f]);
-            let test = mid_stat(set_of_factors);
-            if(isNaN(test)){
-                test = mid_stat(set_of_factors);
-            }
-            let factor_mean = mid_stat(dp.filter((e)=>e[dim_name2] == factors[f]));
-            avg += Math.abs( mean - factor_mean);
-        }
-        return avg / factors.length;
+function focusPropGen(stat_name, dim, focus){
+    return [stat_name, function(dp, group, total){
+        if(total == 0) return 0;
+        return dp.filter(e => e[dim] == focus).length / dp.length || 0;
     }];
-}
-
-function fStat(stat_name, dim_name, dim_name2, factors, mid_stat){
-    return avDev(stat_name, dim_name, dim_name2, factors, mid_stat);
 }
 
 function slopeGen(stat_name, dim_name, dim_name2){
-    return [stat_name, function(dp){
+    return [stat_name, function(dp, group, total){
         let mean_x = meanGen('', dim_name)[1](dp);
         let mean_y = meanGen('', dim_name2)[1](dp);
         let covar = dp.reduce((a, c)=> {
@@ -207,7 +314,7 @@ function slopeGen(stat_name, dim_name, dim_name2){
 }
 
 function interceptGen(stat_name, dim_name, dim_name2){
-    return [stat_name, function(dp){
+    return [stat_name, function(dp, group, total){
         let mean_x = meanGen('', dim_name)[1](dp);
         let mean_y = meanGen('', dim_name2)[1](dp);
         let slope = slopeGen(stat_name, dim_name, dim_name2)[1](dp);

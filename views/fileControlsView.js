@@ -1,105 +1,18 @@
 const use_var_dropdown = true;
-function generateFileOptionsHTML(module){
-    return `
-          <div id="fileOptions">
-              <button type="button" class="bluebutton btn btn-default" aria-label="Back" onclick="fc_gotoHome('Home')">
-                  <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
-                  Back to Main Menu
-              </button>
-              <div id = "moduleName" class = "text-center h1">${module}</div>
-              <button id = "selectFileButton" class = "btn btn-primary btn-block" data-toggle="modal" data-target="#fileSelectModal">Select File</button>
-    
-              <div class="modal fade" id="fileSelectModal" tabindex="-1" role="dialog" aria-labelledby="fileSelectModalLabel">
-                <div class="modal-dialog" role="document">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                      <h4 class="modal-title" id="fileSelectModalLabel">Select a file</h4>
-                    </div>
-                    <div class="modal-body">
-                      <div class ="row">
-                          <div class="col-md-8">
-                              <label class = "btn btn-primary local-file-button"> Choose a local file...
-                                  <input id = "localFile" type = "file" value = "Pick a local file" onchange = "fc_localFile()">
-                              </label>
-                          </div>
-    
-                      </div>
-                      <div class="row">
-                        <div class="col-md-8">
-                          <p> Or </p>
-                        </div>
-                      </div>
-                      <div class="row">
-                        <div class="col-md-8">
-                          <div class="btn-group">
-                              <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                  Use an Example file... <span class="caret"></span>
-                                </button>
-                                <ul id= "presetDropdown" class="dropdown-menu">
-                                </ul>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="row">
-                        <div class="col-md-8">
-                          <p> Or </p>
-                        </div>
-                      </div>
-                      <div class="row">
-                        <div class="col-md-8">
-                          <div class="input-group">
-                            <input id="urlInputField" type="text" class="form-control" placeholder="From URL...">
-                            <span class="input-group-btn">
-                              <button class="btn btn-secondary" type="button" onclick="fc_loadFromURL()">Go!</button>
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="modal-footer">
-                      <p class="pull-left" id="selectedFile"></p>
-                      <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                      <button type="button" id="fileSelectDone" class="btn btn-primary" disabled="disabled" onclick="fc_selectedFileClicked()" >Done</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-    
-              <div id = "selectedFileLabel" class = "well invisible"></div>
-              <div id="variablePanel" class="panel panel-default invisible">
-                <div id="variableSelectHeader" class="panel-heading">
-                  <h3 class="panel-title">Variables</h3>
-                </div>
-                <select id="variableSelect" class="panel-body selectpicker" multiple='multiple'>
-                </select>
-              </div>
-    
-              <div id="focusPanel" class="panel panel-default invisible">
-                <div id="focusSelectHeader" class="panel-heading">
-                  <h3 class="panel-title">Category to focus on</h3>
-                </div>
-                <select id="focusSelect" class="panel-body selectpicker">
-                </select>
-              </div>
-              <button id = "sampleButton" class = "btn btn-primary btn-block" onclick="fc_sampleButtonClicked()">Analyse</button>
-          </div>`;
-}
 
-function generateFileOptionsHTML_old(module){
+function generateFileOptionsHTML(module){
 return `
         <div id="fileOptions">
-            <button type="button" class="bluebutton btn btn-default" aria-label="Back" onclick="fc_gotoHome('Home')">
+            <button type="button" class="bluebutton btn btn-primary" aria-label="Back" onclick="fc_gotoHome('Home')">
                 <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
                 Back to Main Menu
             </button>
             <div id = "moduleName" class = "text-center h1">${module}</div>
-            <div id = "selectFileButton" class = "text-center h4" data-toggle="modal" data-target="#fileSelectModal">Select File</div>
             <label class = "btn btn-primary btn-block local-file-button"> Choose a local file...
                 <input id = "localFile" type = "file" value = "Pick a local file" onchange = "fc_localFile()">
             </label>
             <div class="input-group btn-block">
-            <input id="urlInputField" type="text" class="form-control" placeholder="From URL...">
+            <input id="urlInputField" type="text" class="form-control" placeholder="Data from URL...">
             <span class="input-group-btn">
                 <button class="btn btn-secondary" type="button" onclick="fc_loadFromURL()">Go!</button>
             </span>
@@ -139,10 +52,10 @@ return `
         </div>`;
 }
 
-function generateFileControls(old, module_name){
+function generateFileControls(module_name){
 
     // Returns the html for the controls, and functions to populate fields.
-    let generator = old ? generateFileOptionsHTML_old : generateFileOptionsHTML;
+    let generator = generateFileOptionsHTML;
     return [generator(module_name), [populateExampleFiles]];
 }
 

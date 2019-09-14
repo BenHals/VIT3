@@ -543,6 +543,9 @@ let defaultSVGUpdates = {
     }
 }
 
+
+
+
 function svgAttrUpdate(e){
     let styles = ['fill-color', 'stroke-color', 'fill-opacity', 'stroke-opacity'];
     let svg_name_map = {'fill-color': 'fill', 'stroke-color': 'stoke',
@@ -602,14 +605,148 @@ function clearCtx(ctx){
 }
 
 function clearSvg(svg_id){
-    d3.select("#" + svg_id).selectAll('.datapoint').remove();
-    d3.select("#" + svg_id).selectAll('.line').remove();
-    d3.select("#" + svg_id).selectAll('.text').remove();
-    d3.select("#" + svg_id).selectAll('.axis').remove();
+    d3.select("#" + svg_id).selectAll('*').remove();
+    // d3.select("#" + svg_id).selectAll('.line').remove();
+    // d3.select("#" + svg_id).selectAll('.text').remove();
+    // d3.select("#" + svg_id).selectAll('.axis').remove();
 }
 
 function clearSvgTextLines(svg_id){
     d3.select("#" + svg_id).selectAll('.line').remove();
     d3.select("#" + svg_id).selectAll('.text').remove();
     d3.select("#" + svg_id).selectAll('.axis').remove();
+}
+
+function makeSVGBoxplot(bounds, median, lq, uq, min, max){
+    const group = document.createElementNS("http://www.w3.org/2000/svg", 'g');
+    const median_line = document.createElementNS("http://www.w3.org/2000/svg", 'line');
+    median_line.id = `median_line`;
+    median_line.setAttribute('class', `boxplot-line`);
+    median_line.setAttribute('x1', median);
+    median_line.setAttribute('x2', median);
+    median_line.setAttribute('y1', bounds.top);
+    median_line.setAttribute('y2', bounds.bottom);
+    group.insertAdjacentElement('beforeend', median_line);
+    const lq_line = document.createElementNS("http://www.w3.org/2000/svg", 'line');
+    lq_line.id = `lq_line`;
+    lq_line.setAttribute('class', `boxplot-line`);
+    lq_line.setAttribute('x1', lq);
+    lq_line.setAttribute('x2', lq);
+    lq_line.setAttribute('y1', bounds.top);
+    lq_line.setAttribute('y2', bounds.bottom);
+    group.insertAdjacentElement('beforeend', lq_line);
+    const uq_line = document.createElementNS("http://www.w3.org/2000/svg", 'line');
+    uq_line.id = `uq_line`;
+    uq_line.setAttribute('class', `boxplot-line`);
+    uq_line.setAttribute('x1', uq);
+    uq_line.setAttribute('x2', uq);
+    uq_line.setAttribute('y1', bounds.top);
+    uq_line.setAttribute('y2', bounds.bottom);
+    group.insertAdjacentElement('beforeend', uq_line);
+    const top_line = document.createElementNS("http://www.w3.org/2000/svg", 'line');
+    top_line.id = `top_line`;
+    top_line.setAttribute('class', `boxplot-line`);
+    top_line.setAttribute('x1', lq);
+    top_line.setAttribute('x2', uq);
+    top_line.setAttribute('y1', bounds.top);
+    top_line.setAttribute('y2', bounds.top);
+    group.insertAdjacentElement('beforeend', top_line);
+    const bottom_line = document.createElementNS("http://www.w3.org/2000/svg", 'line');
+    bottom_line.id = `bottom_line`;
+    bottom_line.setAttribute('class', `boxplot-line`);
+    bottom_line.setAttribute('x1', lq);
+    bottom_line.setAttribute('x2', uq);
+    bottom_line.setAttribute('y1', bounds.bottom);
+    bottom_line.setAttribute('y2', bounds.bottom);
+    group.insertAdjacentElement('beforeend', bottom_line);
+        // let boxplottop = factor_bounds.bottom - (factor_bounds.bottom - factor_bounds.top)/4 + 13;
+        // let boxplotbottom = factor_bounds.bottom;
+        // el = new visElement('factor'+f+'median', 'line');
+        // el.setAttrInit('x1', median);
+        // el.setAttrInit('y1', boxplotbottom);
+        // el.setAttrInit('x2', median);
+        // el.setAttrInit('y2', boxplottop);
+        // el.setAttrInit('stat', median);
+        // el.setAttrInit('stroke-opacity', 0.2);
+        // new_elements.push(el); 
+        // el = new visElement('factor'+f+'lq', 'line');
+        // el.setAttrInit('x1', lq);
+        // el.setAttrInit('y1', boxplotbottom);
+        // el.setAttrInit('x2', lq);
+        // el.setAttrInit('y2', boxplottop);
+        // el.setAttrInit('stat', lq);
+        // el.setAttrInit('stroke-opacity', 0.2);
+        // new_elements.push(el); 
+        // el = new visElement('factor'+f+'uq', 'line');
+        // el.setAttrInit('x1', uq);
+        // el.setAttrInit('y1', boxplotbottom);
+        // el.setAttrInit('x2', uq);
+        // el.setAttrInit('y2', boxplottop);
+        // el.setAttrInit('stat', uq);
+        // el.setAttrInit('stroke-opacity', 0.2);
+        // new_elements.push(el); 
+        // el = new visElement('factor'+f+'boxtop', 'line');
+        // el.setAttrInit('x1', lq);
+        // el.setAttrInit('y1', boxplottop);
+        // el.setAttrInit('x2', uq);
+        // el.setAttrInit('y2', boxplottop);
+        // el.setAttrInit('stat', uq);
+        // el.setAttrInit('stroke-opacity', 0.2);
+        // new_elements.push(el); 
+        // el = new visElement('factor'+f+'boxbot', 'line');
+        // el.setAttrInit('x1', lq);
+        // el.setAttrInit('y1', boxplotbottom);
+        // el.setAttrInit('x2', uq);
+        // el.setAttrInit('y2', boxplotbottom);
+        // el.setAttrInit('stat', uq);
+        // el.setAttrInit('stroke-opacity', 0.2);
+        // new_elements.push(el); 
+    return group;
+}
+function makeSVGArrow(x1, x2, y1, y2){
+    const group = document.createElementNS("http://www.w3.org/2000/svg", 'g');
+
+    const vertical = (y1 != y2);
+    const direction = !vertical ? Math.sign(x1 - x2) : Math.sign(y1 - y2);
+
+    const width = Math.min(10, (vertical ? Math.abs(y2 - y1) : Math.abs(x2 - x1)) / 2) / 2;
+
+
+    const main_line = document.createElementNS("http://www.w3.org/2000/svg", 'line');
+    main_line.id = 'arrow_main_line';
+    main_line.setAttribute('x1', x1);
+    main_line.setAttribute('x2', x2);
+    main_line.setAttribute('y1', y1);
+    main_line.setAttribute('y2', y2);
+    main_line.setAttribute('class', 'arrow');
+    // main_line.setAttribute('shape-rendering', 'crispEdges');
+    group.insertAdjacentElement('beforeend', main_line);
+
+    const arrow_arm_1 = document.createElementNS("http://www.w3.org/2000/svg", 'line');
+    arrow_arm_1.id = 'arrow_arm_1';
+    arrow_arm_1.setAttribute('class', 'arrow');
+    const arrow_arm_2 = document.createElementNS("http://www.w3.org/2000/svg", 'line');
+    arrow_arm_2.id = 'arrow_arm_2';
+    arrow_arm_2.setAttribute('class', 'arrow');
+
+    arrow_arm_1.setAttribute('x1', x2);
+    arrow_arm_1.setAttribute('y1', y2);
+    arrow_arm_2.setAttribute('x1', x2);
+    arrow_arm_2.setAttribute('y1', y2);
+    
+    if(vertical){
+        arrow_arm_1.setAttribute('x2', x2 + width);
+        arrow_arm_1.setAttribute('y2', y2 + (direction * width));
+        arrow_arm_2.setAttribute('x2', x2 - width);
+        arrow_arm_2.setAttribute('y2', y2 + (direction * width));
+    }else{
+        arrow_arm_1.setAttribute('x2', x2 + (direction * width * 2));
+        arrow_arm_1.setAttribute('y2', y2 + width);
+        arrow_arm_2.setAttribute('x2', x2 + (direction * width * 2));
+        arrow_arm_2.setAttribute('y2', y2 - width);
+    }
+    group.insertAdjacentElement('beforeend', arrow_arm_1);
+    group.insertAdjacentElement('beforeend', arrow_arm_2);
+
+    return group;
 }

@@ -25,24 +25,47 @@ const config = {
     //#9f1213 
     //#7D1935
     // Function to get statistics options users are able to select.
-    initStatistics: function(dimensions){
-        if(dimensions[0].type == 'numeric'){
-            if( dimensions.length < 2 ||
-            (dimensions[1].type == 'categoric' &&
+    // initStatistics: function(dimensions){
+    //     if(dimensions[0].type == 'numeric'){
+    //         if( dimensions.length < 2 ||
+    //         (dimensions[1].type == 'categoric' &&
+    //         dimensions[1].factors.length < 3)){
+    //             return ["Mean", "Median"];
+    //         }else if(dimensions[1].type == 'numeric'){
+    //             return ["Slope"];
+    //         }else{
+    //             return ["Average Deviation", "F Stat"];
+    //         }
+    //     }else{
+    //         if(dimensions.length < 2 || dimensions[1].factors.length < 3){
+    //             return ["proportion"];
+    //         }else{
+    //             return ["Average Deviation", "F Stat"];
+    //         }
+            
+    //     }
+    // },
+    initStatisticAnalysis: function(dimensions){
+            if(dimensions.length < 2) return ["Point Value"];
+            if((dimensions[1].type == 'categoric' &&
             dimensions[1].factors.length < 3)){
-                return ["Mean", "Median"];
+                return ["Difference"];
             }else if(dimensions[1].type == 'numeric'){
                 return ["Slope"];
             }else{
                 return ["Average Deviation", "F Stat"];
+            }   
+    },
+
+    initStatistics: function(dimensions){
+        if(dimensions[0].type == 'numeric'){
+            if(dimensions.length > 1 && dimensions[1].type == 'numeric'){
+                return ["Slope", "Intercept"];
+            }else{
+                return ["Mean", "Median", "Lower Quartile", "Upper Quartile", "Min", "Max", "Standard Deviation"];
             }
         }else{
-            if(dimensions.length < 2 || dimensions[1].factors.length < 3){
-                return ["proportion"];
-            }else{
-                return ["Average Deviation", "F Stat"];
-            }
-            
+            return ["Proportion"];
         }
     },
 
@@ -121,7 +144,9 @@ config.modules =  {
             if(dimensions.length < 1) return;
             this.options = [];
             let statistics = {name: 'Statistic', type: 'category', values: config.initStatistics(dimensions), default: config.initStatistics(dimensions)[0], validate: (v, o)=> o.values.includes(v)};
+            let statisticsAnalysis = {name: 'Analysis', type: 'category', values: config.initStatisticAnalysis(dimensions), default: config.initStatisticAnalysis(dimensions)[0], validate: (v, o)=> o.values.includes(v)};
             this.options.push(statistics);
+            this.options.push(statisticsAnalysis);
             let sample_size = {name: 'Sample Size', type: "number", range: [0, 'max'], default: 10, validate: (v, o)=> (v > o.range[0] && v < o.range[1])};
             this.options.push(sample_size);
         },
@@ -170,7 +195,9 @@ config.modules =  {
             if(dimensions.length < 1) return;
             this.options = [];
             let statistics = {name: 'Statistic', type: 'category', values: config.initStatistics(dimensions), default: config.initStatistics(dimensions)[0], validate: (v, o)=> o.values.includes(v)};
+            let statisticsAnalysis = {name: 'Analysis', type: 'category', values: config.initStatisticAnalysis(dimensions), default: config.initStatisticAnalysis(dimensions)[0], validate: (v, o)=> o.values.includes(v)};
             this.options.push(statistics);
+            this.options.push(statisticsAnalysis);
             let sample_size = {name: 'Sample Size', type: "number", range: [0, 'max'], default: 10, validate: (v, o)=> (v > o.range[0] && v < o.range[1])};
             this.options.push(sample_size);
         },
@@ -218,7 +245,9 @@ config.modules =  {
             if(dimensions.length < 1) return;
             this.options = [];
             let statistics = {name: 'Statistic', type: 'category', values: config.initStatistics(dimensions), default: config.initStatistics(dimensions)[0], validate: (v, o)=> o.values.includes(v)};
+            let statisticsAnalysis = {name: 'Analysis', type: 'category', values: config.initStatisticAnalysis(dimensions), default: config.initStatisticAnalysis(dimensions)[0], validate: (v, o)=> o.values.includes(v)};
             this.options.push(statistics);
+            this.options.push(statisticsAnalysis);
             //if(dimensions[0].type == 'numeric'){
                 let pop_size = model.getPopulationSize();
                 let sample_size = {name: 'Sample Size', type: "number", hide_option: true, range: [pop_size, pop_size], default: pop_size, validate: (v, o)=> (v >= o.range[0] && v <= o.range[1])};
@@ -274,8 +303,10 @@ config.modules =  {
         generateOptions: function(dimensions, num){
             if(dimensions.length < 1) return;
             this.options = [];
-            let statistics = {name: 'Statistic', type: 'category', values: config.initStatistics(model.getSampleDimensions()), default: config.initStatistics(model.getSampleDimensions())[0], validate: (v, o)=> o.values.includes(v)};
+            let statistics = {name: 'Statistic', type: 'category', values: config.initStatistics(dimensions), default: config.initStatistics(dimensions)[0], validate: (v, o)=> o.values.includes(v)};
+            let statisticsAnalysis = {name: 'Analysis', type: 'category', values: config.initStatisticAnalysis(dimensions), default: config.initStatisticAnalysis(dimensions)[0], validate: (v, o)=> o.values.includes(v)};
             this.options.push(statistics);
+            this.options.push(statisticsAnalysis);
             let groups = {name: 'Groups', type: "number", range: [0, 5], default: num || 2, validate: (v, o)=> {
                 let valid =  v > o.range[0] && v < o.range[1];
                 if(!valid) return false;
@@ -349,7 +380,9 @@ config.modules =  {
             if(dimensions.length < 1) return;
             this.options = [];
             let statistics = {name: 'Statistic', type: 'category', values: config.initStatistics(dimensions), default: config.initStatistics(dimensions)[0], validate: (v, o)=> o.values.includes(v)};
+            let statisticsAnalysis = {name: 'Analysis', type: 'category', values: config.initStatisticAnalysis(dimensions), default: config.initStatisticAnalysis(dimensions)[0], validate: (v, o)=> o.values.includes(v)};
             this.options.push(statistics);
+            this.options.push(statisticsAnalysis);
             if(true){
             // if(dimensions[0].type == 'numeric'){
                 let pop_size = model.getPopulationSize();

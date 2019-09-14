@@ -5,20 +5,6 @@ function generateOptionControlsHTML(module){
         <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
       </button>
       <div id = "moduleName" class = "text-center h1">${module}</div>
-        <div id="options">
-        </div>
-      <button id = "takeSamplesButton" class = "btn btn-primary btn-block" onclick="takeSamplesButtonClicked()">Take Samples</button>
-    </div>
-    `;
-}
-
-function generateoptionControlsHTML_old(module){
-    return `
-    <div id="sampleOptions">
-      <button type="button" class="btn btn-default" aria-label="Back" onclick="oc_back()">
-        <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
-      </button>
-      <div id = "moduleName" class = "text-center h1">${module}</div>
       <div id="options">
       </div>
       <button id = "takeSamplesButton" class = "btn btn-primary btn-block" onclick="oc_takeSamplesButtonClicked()">Take Samples</button>
@@ -58,7 +44,7 @@ function genOption(name, option, value){
 function generateOptionControls(old, module_name){
 
     // Returns the html for the controls, and functions to populate fields.
-    let generator = old ? generateoptionControlsHTML_old : generateOptionControlsHTML;
+    let generator = generateOptionControlsHTML;
     return [generator(module_name), []];
 }
 

@@ -1,30 +1,9 @@
 const vis = {
-    init: function(){
+    init: function(width, height){
         this.destroy();
-        this.canvas = document.getElementById('popCanvas');
-        this.dynamicCanvas = document.getElementById('dynamicCanvas');
-        this.staticOnTopCanvas = document.getElementById('staticOnTopCanvas');
-        this.ctx = this.canvas.getContext('2d');
-        this.dynamicCtx = this.dynamicCanvas.getContext('2d');
-        this.staticOnTopCtx = this.staticOnTopCanvas.getContext('2d');
-        this.ctx.imageSmoothingEnabled = false;
-        this.ctx.mozImageSmoothingEnabled = false;
-        this.ctx.oImageSmoothingEnabled = false;
-        this.ctx.webkitImageSmoothingEnabled = false;
-        this.dynamicCtx.imageSmoothingEnabled = false;
-        this.dynamicCtx.mozImageSmoothingEnabled = false;
-        this.dynamicCtx.oImageSmoothingEnabled = false;
-        this.dynamicCtx.webkitImageSmoothingEnabled = false;
-
-        this.staticElements = {};
-        this.staticElements.ontop = [];
-        this.dynamicElements = {};
-        this.interpolators = [];
-        let canvas_bounds = this.canvas.getBoundingClientRect();
-        canvas_bounds.width = this.canvas.getAttribute("width");
-        canvas_bounds.height = this.canvas.getAttribute("height");
-        let PIXEL_RATIO = 1
-        this.areas = sectionAreas({top: 0, left: 0, right: canvas_bounds.width, bottom: canvas_bounds.height, width: canvas_bounds.width, height: canvas_bounds.height, PIXEL_RATIO: PIXEL_RATIO});
+        this.width = width;
+        this.height = height;
+        this.areas = sectionAreas({top: 0, left: 0, right: width, bottom: height, width: width, height: height});
 
         this.current_stage = 0;
         this.last_frame = null;
@@ -49,38 +28,24 @@ const vis = {
     initOptions: function(options){
         this.options = options;
     },
+    initDataset(dataset, dimensions, container_svg, area, name){
+        const svg = document.querySelector(container_svg); 
+        const domain = [dataset.statistics.overall.point_stats.Min, dataset.statistics.overall.point_stats.Max];
+        const range = [this.areas[`${area}axis`].innerLeft  + this.areas[`${area}axis`].margin, this.areas[`${area}axis`].innerRight - this.areas[`${area}axis`].margin];
+        createStaticLabels(dimensions, this.areas[`${area}display`], svg);
+        createElementsFromDataset(dataset, this.options, this.areas[`${area}display`], domain, range, dimensions, name, svg);
+        createStatMarkersFromDataset(dataset, this.options, this.areas, this.areas[`${area}display`], domain, range, dimensions, `${name}_stats`, svg);
+        createAnalysisMarkersFromDataset(dataset, this.options, this.areas, this.areas[`${area}display`], domain, range, dimensions, `${name}_analysis`, svg);
+        scale = d3.scaleLinear().domain(domain).nice();
+        scale.range(range)
+        createAxis(scale, this.areas[`${area}axis`], dimensions, `${name}_axis`, svg)
+
+        return [scale];
+    },
     initPopulation: function(dataset){
-        this.initPreview(dataset);
-
-        if(this.population_dimensions[0].type == 'numeric'){
-            this.popMax = this.staticElements.datapoints.all.reduce((a, c)=> c.attrs[this.population_dimensions[0].name] > a ? c.attrs[this.population_dimensions[0].name] : a, -100000);
-            this.popMin = this.staticElements.datapoints.all.reduce((a, c)=> c.attrs[this.population_dimensions[0].name] < a ? c.attrs[this.population_dimensions[0].name] : a, 100000);
-            let scale = d3.scaleLinear().domain([this.popMin, this.popMax]).nice();
-            let extent = scale.domain();
-            this.popMax = extent[1];
-            this.popMin = extent[0];
-
-        }else{
-            this.popMax = 1;
-            this.popMin = 0;
-        }
-        let stat_markers = statisticsFromElements(
-            this.staticElements.datapoints,
-            this.population_dimensions,
-            this.areas["sec0display"],
-            this.options,
-            dataset,
-            this.popMin,
-            this.popMax,
-            this.areas
-        );
-        this.staticElements.stat_markers = stat_markers;
-        this.staticElements.all = this.staticElements.all.concat(stat_markers);
-        let axis = axisFromDataset(this.areas["sec0axis"], this.popMin, this.popMax);
-        this.staticElements.pop_axis = axis;
-        this.staticElements.all = this.staticElements.all.concat(axis);
-        this.drawStatic();
-        
+        clearSvg('popSVG');
+        createSectionLabels(this.module.labels, this.areas);
+        [this.population_scale] = this.initDataset(dataset, this.population_dimensions, '#popSVG', 'sec0', 'population'); 
     },
     initSamples: function(samples, distribution){
         this.current_sample - 0;

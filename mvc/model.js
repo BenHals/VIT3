@@ -1,6 +1,5 @@
 const model = {
     selected_module: undefined,
-    use_old: true,
     file: undefined,
     parsedData: undefined,
     selected_columns: new Set(),
@@ -321,6 +320,7 @@ const model = {
             let row_obj = {id: id_val};
             let is_valid = true;
             for(var d in this.dimensions){
+                if(isNaN(d)) continue;
                 let dim = this.dimensions[d];
                 if(!dim.name) continue;
                 var el = row[dim.name];
@@ -340,14 +340,14 @@ const model = {
     populationDataset: function(){
         this.cleanData();
         let stat = this.genStatistics(this.cleaned_data, this.dimensions);
-        this.populationDS = createDataset(this.cleaned_data, this.dimensions, stat);
+        let statanalysis = this.genStatisticAnalysis(this.cleaned_data, this.dimensions);
+        this.populationDS = createDatasetMinimal(this.cleaned_data, this.dimensions, stat, statanalysis);
         // want to sort factors in terms of statistic
         if(this.dimensions.has_factors){
-            let factors = this.populationDS[this.dimensions[0].name][this.dimensions[1].name];
-            let sort_stat = this.dimensions[0].type == 'numeric' ? "Mean" : "proportion";
+            let factors = this.dimensions[1].factors;
+            let sort_stat = this.dimensions[0].type == 'numeric' ? "Mean" : "Proportion";
             this.dimensions[1].factors.sort((a, b)=> {
-                
-                return factors[a].statistics[sort_stat] - factors[b].statistics[sort_stat];
+                return this.populationDS.statistics.factor_2[a].point_stats[sort_stat] - this.populationDS.statistics.factor_2[b].point_stats[sort_stat] ;
             });
         }
         this.populationDS.largeCI = this.largeCI;
@@ -359,6 +359,7 @@ const model = {
         return this.populationDS.all.length;
     },
 
+
     genStatistics: function(cleaned_data, dimensions){
         let generator = {overall: [], // Statistics across all datapoints, I.E mean of everything
             fac1: [], // Statistics for each category of factor 1
@@ -367,30 +368,78 @@ const model = {
         if(dimensions[0].type == 'numeric'){
             generator.overall.push(meanGen('Mean', dimensions[0].name));
             generator.fac2.push(meanGen('Mean', dimensions[0].name));
+            generator.fac1.push(meanGen('Mean', dimensions[0].name));
             generator.both.push(meanGen('Mean', dimensions[0].name));
             generator.overall.push(medianGen('Median', dimensions[0].name));
             generator.fac2.push(medianGen('Median', dimensions[0].name));
+            generator.fac1.push(medianGen('Median', dimensions[0].name));
             generator.both.push(medianGen('Median', dimensions[0].name));
-            generator.overall.push(lqGen('lq', dimensions[0].name));
-            generator.overall.push(uqGen('uq', dimensions[0].name));
-            generator.overall.push(stdGen('std', dimensions[0].name));
-            if(dimensions.length > 1){
-                generator.overall.push(avDev('Average Deviation', dimensions[0].name, dimensions[1].name, dimensions[1].factors, meanGen('', dimensions[0].name)[1]));
-                generator.overall.push(fStat('F Stat', dimensions[0].name, dimensions[1].name, dimensions[1].factors, meanGen('', dimensions[0].name)[1]));
+            generator.overall.push(lqGen('Lower Quartile', dimensions[0].name));
+            generator.fac2.push(lqGen('Lower Quartile', dimensions[0].name));
+            generator.fac1.push(lqGen('Lower Quartile', dimensions[0].name));
+            generator.both.push(lqGen('Lower Quartile', dimensions[0].name));
+            generator.overall.push(uqGen('Upper Quartile', dimensions[0].name));
+            generator.fac2.push(uqGen('Upper Quartile', dimensions[0].name));
+            generator.fac1.push(uqGen('Upper Quartile', dimensions[0].name));
+            generator.both.push(uqGen('Upper Quartile', dimensions[0].name));
+
+            if(dimensions.length > 1 && dimensions[1].type == 'numeric'){
                 generator.overall.push(slopeGen('Slope', dimensions[0].name, dimensions[1].name));
                 generator.overall.push(interceptGen('Intercept', dimensions[0].name, dimensions[1].name));
             }
 
         }else{
-            if(dimensions.length > 1) generator.fac2.push(propGen('proportion', dimensions[0].name, dimensions[0].focus, cleaned_data.length));
-            generator.overall.push(propGen('proportion', dimensions[0].name, dimensions[0].focus, cleaned_data.length));
-            generator.overall.push(stdGen('std', dimensions[0].name, dimensions[0].focus));
+            generator.overall.push(propGen('Group Proportion'));
+            generator.fac2.push(propGen('Group Proportion'));
+            generator.fac1.push(propGen('Group Proportion'));
+            generator.both.push(propGen('Group Proportion'));
+            generator.overall.push(focusPropGen('Proportion', dimensions[0].name, dimensions[0].focus));
+            generator.fac2.push(focusPropGen('Proportion', dimensions[0].name, dimensions[0].focus));
+            generator.fac1.push(focusPropGen('Proportion', dimensions[0].name, dimensions[0].focus));
+            generator.both.push(focusPropGen('Proportion', dimensions[0].name, dimensions[0].focus));
+        }
+        generator.overall.push(maxGen('Max', dimensions[0].name, dimensions[0].type != 'numeric'));
+        generator.overall.push(minGen('Min', dimensions[0].name, dimensions[0].type != 'numeric'));
+        generator.fac2.push(maxGen('Max', dimensions[0].name, dimensions[0].type != 'numeric'));
+        generator.fac2.push(minGen('Min', dimensions[0].name, dimensions[0].type != 'numeric'));
+        generator.fac1.push(maxGen('Max', dimensions[0].name, dimensions[0].type != 'numeric'));
+        generator.fac1.push(minGen('Min', dimensions[0].name, dimensions[0].type != 'numeric'));
+        generator.both.push(maxGen('Max', dimensions[0].name, dimensions[0].type != 'numeric'));
+        generator.both.push(minGen('Min', dimensions[0].name, dimensions[0].type != 'numeric'));
+        generator.overall.push(stdGen('Standard Deviation', dimensions[0].name));
+        generator.fac2.push(stdGen('Standard Deviation', dimensions[0].name));
+        generator.fac1.push(stdGen('Standard Deviation', dimensions[0].name));
+        generator.both.push(stdGen('Standard Deviation', dimensions[0].name));
+        return generator;
+    },
+    genStatisticAnalysis: function(cleaned_data, dimensions){
+        let generator = {overall: [], // Statistics across all datapoints, I.E mean of everything
+            fac1: [], // Statistics for each category of factor 1
+            fac2: [], // Statistics for each category of factor 2
+            both: []}; // Statistics for each combination of fac1, fac 2.
+        if(dimensions[0].type == 'numeric'){
+            generator.fac2.push(deviationAnalysis('Deviation', dimensions[0].name));
+            generator.fac1.push(deviationAnalysis('Deviation', dimensions[0].name));
+            generator.both.push(deviationAnalysis('Deviation', dimensions[0].name));
             if(dimensions.length > 1){
-                generator.overall.push(avDev('Average Deviation', dimensions[0].name, dimensions[1].name, dimensions[1].factors, propGen('', dimensions[0].name, dimensions[0].focus, cleaned_data.length)[1] ));
-                generator.overall.push(fStat('F Stat', dimensions[0].name, dimensions[1].name, dimensions[1].factors, propGen('', dimensions[0].name, dimensions[0].focus, cleaned_data.length)[1]));
+                generator.overall.push(avDevAnalysis('Average Deviation', dimensions[1].name, dimensions[1].factors));
+                generator.overall.push(fStatAnalysis('F Stat', dimensions[1].name, dimensions[1].factors));
+                generator.overall.push(differenceAnalysis('Difference', dimensions[1].name, dimensions[1].factors));
+            }
+            
+        }else{
+            
+            if(dimensions.length > 1){
+                generator.overall.push(avDevAnalysis('Average Deviation', dimensions[1].name, dimensions[1].factors));
+                generator.overall.push(fStatAnalysis('F Stat', dimensions[1].name, dimensions[1].factors));
+                generator.overall.push(differenceAnalysis('Difference', dimensions[1].name, dimensions[1].factors));
             }
 
         }
+        generator.overall.push(pointValueAnalysis('Point Value'));
+        generator.fac2.push(pointValueAnalysis('Point Value'));
+        generator.fac1.push(pointValueAnalysis('Point Value'));
+        generator.both.push(pointValueAnalysis('Point Value'));
         return generator;
     },
     
@@ -433,7 +482,7 @@ const model = {
 
         // }else{
             let sample = sample_generator(population_data, sample_size);
-            let ds = createDataset(sample, this.getSampleDimensions(), this.genStatistics(sample, this.getSampleDimensions()));
+            let ds = createDatasetMinimal(sample, this.getSampleDimensions(), this.genStatistics(sample, this.getSampleDimensions()), this.genStatisticAnalysis(sample, this.getSampleDimensions()));
             let dim = this.getSampleDimensions();
             let stat_value = this.selected_module.generateDistribution(ds, stat);
             if(dim.length > 1 && dim[1].factors.length == 2){
@@ -448,7 +497,7 @@ const model = {
     },
     genLargeSample: async function(population_data, sample_size, sample_generator, stat, i){
         let sample = sample_generator(population_data, sample_size);
-        let ds = createDataset(sample, this.getSampleDimensions(), this.genStatistics(sample, this.getSampleDimensions()));
+        let ds = createDatasetMinimal(sample, this.getSampleDimensions(), this.genStatistics(sample, this.getSampleDimensions()), this.genStatisticAnalysis(sample, this.getSampleDimensions()));
         let dim = this.getSampleDimensions();
         let stat_value = this.selected_module.generateDistribution(ds, stat);
         if(dim.length > 1 && dim[1].factors.length == 2){
