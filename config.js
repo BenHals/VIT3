@@ -159,7 +159,7 @@ config.modules =  {
             if(dimensions.length < 1) return;
             if(dimensions.length > 1 && dimensions[1].factors.length > 2){
                 this.inCI = function(distribution_sorted, dist_element, population_statistic){
-                    return dist_element.point_value > population_statistic;
+                    return Array.isArray(dist_element) ? dist_element[1] : dist_element > population_statistic;
                 }
             }else{
                 this.inCI = function(distribution_sorted, dist_element, population_statistic){
@@ -263,7 +263,7 @@ config.modules =  {
             if(dimensions.length < 1) return;
             if(dimensions.length > 1 && dimensions[1].factors.length > 2){
                 this.inCI = function(distribution_sorted, dist_element, population_statistic){
-                    return dist_element.point_value > population_statistic;
+                    return Array.isArray(dist_element) ? dist_element[1] : dist_element > population_statistic;
                 }
             }else{
                 this.inCI = function(distribution_sorted, dist_element, population_statistic){
@@ -311,12 +311,13 @@ config.modules =  {
                 let valid =  v > o.range[0] && v < o.range[1];
                 if(!valid) return false;
                 model.module_options['Groups'] = v;
-                let stat_values = config.initStatistics(model.getSampleDimensions());
+                // let stat_values = config.initStatistics(model.getSampleDimensions());
+                let Analysis_options = config.initStatisticAnalysis(model.getSampleDimensions());
                 for(let o = 0; o < model.selected_module.options.length; o++){
                     let option = model.selected_module.options[o];
-                    if(option.name == 'Statistic'){
-                        option.values = stat_values;
-                        option.default = stat_values[0];
+                    if(option.name == 'Analysis'){
+                        option.values = Analysis_options;
+                        option.default = Analysis_options[0];
                         model.module_options[option.name] = option.default;
                         oc_refresh_option(option.name, option, option.default);
                     }
@@ -399,7 +400,7 @@ config.modules =  {
             if(dimensions.length < 1) return;
             // if(dimensions.length > 1 && dimensions[1].factors.length > 2){
                 this.inCI = function(distribution_sorted, dist_element, population_statistic){
-                    return dist_element.point_value > population_statistic;
+                    return Array.isArray(dist_element) ? dist_element[1] : dist_element > population_statistic;
                 }
             // }else{
             //     this.inCI = function(distribution_sorted, dist_element, population_statistic){

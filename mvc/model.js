@@ -12,7 +12,7 @@ const model = {
         this.getDefaultOptions();
     },
     getDefaultOptions: function(d){
-        this.selected_module.generateOptions(this.dimensions, d);
+        this.selected_module.generateOptions(this.getSampleDimensions(), d);
         this.selected_module.generateInCi(this.dimensions);
         let options = this.selected_module.options;
         let options_url = JSON.parse(getURLParameter(window.location.href, 'options')) || {};
@@ -38,6 +38,14 @@ const model = {
     },
     getOptions: function(){
         return this.module_options;
+    },
+    getVisOptions: function(){
+        let options = this.getOptions();
+        options.popAnalysis = options.Analysis;
+        if(this.selected_module.name == "Randomisation Variation"){
+            options.popAnalysis = "Point Value"
+        }
+        return options;
     },
     setOption: function(option_name, value){
         this.module_options[option_name] = value;
@@ -279,7 +287,7 @@ const model = {
         if(this.selected_module.name != "Randomisation Variation"){
             return this.dimensions;
         }else{
-            let num_groups = this.getOptions()['Groups'];
+            let num_groups = this.getOptions()['Groups'] || 2;
             let group_names = ["A", "B", "C", "D", "E"];
             let new_dimension = {name: "synthetic", type: "categoric", factors: group_names.slice(0, num_groups)};
             let s_dimension = this.dimensions.concat([new_dimension]);
@@ -355,7 +363,7 @@ const model = {
     },
 
     getPopulationSize: function(){
-        if(!this.populationDS) return this.cleaned_data.length;
+        if(!this.populationDS) return (this.cleaned_data && this.cleaned_data.length) || 0;
         return this.populationDS.all.length;
     },
 
@@ -440,6 +448,14 @@ const model = {
         generator.fac2.push(pointValueAnalysis('Point Value'));
         generator.fac1.push(pointValueAnalysis('Point Value'));
         generator.both.push(pointValueAnalysis('Point Value'));
+        generator.overall.push(stdAnalysis('Standard Deviation', dimensions[0].name));
+        generator.fac2.push(stdAnalysis('Standard Deviation', dimensions[0].name));
+        generator.fac1.push(stdAnalysis('Standard Deviation', dimensions[0].name));
+        generator.both.push(stdAnalysis('Standard Deviation', dimensions[0].name));
+        generator.overall.push(ciAnalysis('Confidence Interval', dimensions[0].name));
+        generator.fac2.push(ciAnalysis('Confidence Interval', dimensions[0].name));
+        generator.fac1.push(ciAnalysis('Confidence Interval', dimensions[0].name));
+        generator.both.push(ciAnalysis('Confidence Interval', dimensions[0].name));
         return generator;
     },
     
@@ -451,14 +467,15 @@ const model = {
         this.distribution = [];
         this.largeSampleFinished = false;
         let stat = model.getOptions()["Statistic"];
+        let gen_large = this.selected_module.name == "Bootstrapping" || this.selected_module.name == "Randomisation Test";
         for(let i = 1; i <= 1000; i++){
             let sample_dataset = null;
-            setTimeout(()=> {this.genSample(population_data, sample_size, sample_generator, stat, i)}, 0);
+            setTimeout(()=> {this.genSample(population_data, sample_size, sample_generator, stat, i, gen_large ? 11000: 1000)}, 0);
         }
-        if(this.selected_module.name == "Bootstrapping" || this.selected_module.name == "Randomisation Test"){
+        if(gen_large){
             this.largeSampleStats = [];
             for(let i = 1; i <= 10000; i++){
-                setTimeout(()=> {this.genLargeSample(population_data, sample_size, sample_generator, stat, i)}, 0);
+                setTimeout(()=> {this.genLargeSample(population_data, sample_size, sample_generator, stat, i, 11000)}, 0);
             }
         }else{
             this.largeSampleFinished = true;
@@ -466,7 +483,7 @@ const model = {
 
         
     },
-    genSample: async function(population_data, sample_size, sample_generator, stat, i){
+    genSample: async function(population_data, sample_size, sample_generator, stat, i, total){
         // if(window.Worker){
         //     let data = null;
         //     let p = new Promise((resolve, reject)=>{
@@ -484,46 +501,52 @@ const model = {
             let sample = sample_generator(population_data, sample_size);
             let ds = createDatasetMinimal(sample, this.getSampleDimensions(), this.genStatistics(sample, this.getSampleDimensions()), this.genStatisticAnalysis(sample, this.getSampleDimensions()));
             let dim = this.getSampleDimensions();
-            let stat_value = this.selected_module.generateDistribution(ds, stat);
-            if(dim.length > 1 && dim[1].factors.length == 2){
-                let f0_stat = ds[dim[0].name][dim[1].name][dim[1].factors[0]].statistics[stat];
-                let f1_stat = ds[dim[0].name][dim[1].name][dim[1].factors[1]].statistics[stat];
-                stat_value.point_value = f1_stat - f0_stat;
-            }
+            let stat_value = ds.statistics.overall.analysis[this.module_options.Statistic][this.module_options.Analysis];
+            // let stat_value = this.selected_module.generateDistribution(ds, stat);
+            // if(dim.length > 1 && dim[1].factors.length == 2){
+            //     let f0_stat = ds[dim[0].name][dim[1].name][dim[1].factors[0]].statistics[stat];
+            //     let f1_stat = ds[dim[0].name][dim[1].name][dim[1].factors[1]].statistics[stat];
+            //     stat_value.point_value = f1_stat - f0_stat;
+            // }
             this.distribution.push(stat_value);
             this.samples.push(ds);
-            controller.updateSampleProgress(i/1000);
+            controller.updateSampleProgress(i/total);
         //}
     },
-    genLargeSample: async function(population_data, sample_size, sample_generator, stat, i){
+    genLargeSample: async function(population_data, sample_size, sample_generator, stat, i, total){
         let sample = sample_generator(population_data, sample_size);
         let ds = createDatasetMinimal(sample, this.getSampleDimensions(), this.genStatistics(sample, this.getSampleDimensions()), this.genStatisticAnalysis(sample, this.getSampleDimensions()));
         let dim = this.getSampleDimensions();
-        let stat_value = this.selected_module.generateDistribution(ds, stat);
-        if(dim.length > 1 && dim[1].factors.length == 2){
-            let f0_stat = ds[dim[0].name][dim[1].name][dim[1].factors[0]].statistics[stat];
-            let f1_stat = ds[dim[0].name][dim[1].name][dim[1].factors[1]].statistics[stat];
-            stat_value.point_value = f1_stat - f0_stat;
-        }
+        let stat_value = ds.statistics.overall.analysis[this.module_options.Statistic][this.module_options.Analysis];
+        // let stat_value = this.selected_module.generateDistribution(ds, stat);
+        // if(dim.length > 1 && dim[1].factors.length == 2){
+        //     let f0_stat = ds[dim[0].name][dim[1].name][dim[1].factors[0]].statistics[stat];
+        //     let f1_stat = ds[dim[0].name][dim[1].name][dim[1].factors[1]].statistics[stat];
+        //     stat_value.point_value = f1_stat - f0_stat;
+        // }
         this.largeSampleStats.push(stat_value);
-        controller.updateSampleProgress(i/1000);
+        controller.updateSampleProgress((i + 1000)/total);
+        if(i+ 1000 == total){
+            console.log("done");
+        }
         if(this.largeSampleStats.length == 10000){
             
-            let stat = getPopulationStatistic(this.populationDS, this.getOptions().Statistic, this.dimensions)[0];
-            let sorted_dist = this.largeSampleStats.sort(function(a, b){return Math.abs(a.point_value - stat) - Math.abs(b.point_value - stat)});
+            // let stat = getPopulationStatistic(this.populationDS, this.getOptions().Statistic, this.dimensions)[0];
+            let stat = this.populationDS.statistics.overall.analysis[this.module_options.Statistic][this.module_options.Analysis];
+            let sorted_dist = this.largeSampleStats.sort(function(a, b){return Math.abs(Array.isArray(a) ? a[1] : a - stat) - Math.abs(Array.isArray(b) ? b[1] : b - stat)});
             let min_stat = null;
             let max_stat = null;
             let in_ci_count = 0;
             for(let ls = 0; ls < sorted_dist.length; ls++){
                 let in_ci = this.selected_module.inCI(sorted_dist, sorted_dist[ls], stat);
                 if(in_ci) in_ci_count++;
-                if(in_ci && (min_stat == null || sorted_dist[ls].point_value < min_stat)) min_stat = sorted_dist[ls].point_value;
-                if(in_ci && (max_stat == null || sorted_dist[ls].point_value > max_stat)) max_stat = sorted_dist[ls].point_value;
+                if(in_ci && (min_stat == null || Array.isArray(sorted_dist[ls]) ? sorted_dist[ls][1] : sorted_dist[ls] < min_stat)) min_stat = Array.isArray(sorted_dist[ls]) ? sorted_dist[ls][1] : sorted_dist[ls];
+                if(in_ci && (max_stat == null || Array.isArray(sorted_dist[ls]) ? sorted_dist[ls][1] : sorted_dist[ls] > max_stat)) max_stat = Array.isArray(sorted_dist[ls]) ? sorted_dist[ls][1] : sorted_dist[ls];
             }
             this.largeCI = [min_stat, max_stat, in_ci_count];
             this.populationDS.largeCI = [min_stat, max_stat, in_ci_count];
             this.largeSampleFinished = true;
-            controller.updateSampleProgress(i/1000);
+            controller.updateSampleProgress((i + 1000)/total);
             this.largeSampleStats = [];
         }
     },

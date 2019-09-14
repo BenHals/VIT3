@@ -308,11 +308,11 @@ function generateAniControlsHTML_old(module_name, labels){
   }
 }
 
-function generateAniControls(old, module_name){
+function generateAniControls(module_name){
     let labels = model.selected_module.playSectionLabels;
 
     // Returns the html for the controls, and functions to populate fields.
-    let generator = old ? generateAniControlsHTML_old : generateAniControlsHTML;
+    let generator = generateAniControlsHTML_old;
     return [generator(module_name, labels), [ac_initHide(module_name)]];
 }
 
@@ -402,7 +402,7 @@ function ac_setPlaybackProgress(p){
 
 function ac_updateProgress(p){
   $('#takeSamplesProgress').show();
-  $('#takeSamplesProgress').css('width', `${p*1000}%`);
+  $('#takeSamplesProgress').css('width', `${p*100}%`);
   $('#visControls').hide();
 }
 

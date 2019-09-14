@@ -28,30 +28,32 @@ const vis = {
     initOptions: function(options){
         this.options = options;
     },
-    initDataset(dataset, dimensions, container_svg, area, name){
+    initDataset(dataset, dimensions, container_svg, area, name, is_population){
         const svg = document.querySelector(container_svg); 
         const domain = [dataset.statistics.overall.point_stats.Min, dataset.statistics.overall.point_stats.Max];
         const range = [this.areas[`${area}axis`].innerLeft  + this.areas[`${area}axis`].margin, this.areas[`${area}axis`].innerRight - this.areas[`${area}axis`].margin];
-        createStaticLabels(dimensions, this.areas[`${area}display`], svg);
-        createElementsFromDataset(dataset, this.options, this.areas[`${area}display`], domain, range, dimensions, name, svg);
-        createStatMarkersFromDataset(dataset, this.options, this.areas, this.areas[`${area}display`], domain, range, dimensions, `${name}_stats`, svg);
-        createAnalysisMarkersFromDataset(dataset, this.options, this.areas, this.areas[`${area}display`], domain, range, dimensions, `${name}_analysis`, svg);
+        createStaticLabels(dimensions, this.areas[`${area}display`], svg, is_population);
+        createElementsFromDataset(dataset, this.options, this.areas[`${area}display`], domain, range, dimensions, name, svg, is_population);
+        createStatMarkersFromDataset(dataset, this.options, this.areas, this.areas[`${area}display`], domain, range, dimensions, `${name}_stats`, svg, is_population);
+        createAnalysisMarkersFromDataset(dataset, this.options, this.areas, this.areas[`${area}display`], domain, range, dimensions, `${name}_analysis`, svg, is_population);
         scale = d3.scaleLinear().domain(domain).nice();
         scale.range(range)
-        createAxis(scale, this.areas[`${area}axis`], dimensions, `${name}_axis`, svg)
+        createAxis(scale, this.areas[`${area}axis`], dimensions, `${name}_axis`, svg, is_population)
 
         return [scale];
     },
     initPopulation: function(dataset){
         clearSvg('popSVG');
         createSectionLabels(this.module.labels, this.areas);
-        [this.population_scale] = this.initDataset(dataset, this.population_dimensions, '#popSVG', 'sec0', 'population'); 
+        [this.population_scale] = this.initDataset(dataset, this.population_dimensions, '#popSVG', 'sec0', 'population', true); 
     },
     initSamples: function(samples, distribution){
         this.current_sample - 0;
         this.samples = samples;
         this.distribution = distribution;
-        this.dynamicElements.all = [];
+        clearSvg('dynamicSVG');
+        this.initDataset(this.samples[0], this.sample_dimensions, '#dynamicSVG', 'sec1', 'sample_0', false); 
+
         this.initDistribution(this.distribution);
         //this.initSample(this.samples[this.current_sample], this.dynamicElements.distribution.stats[this.current_sample], true);
         

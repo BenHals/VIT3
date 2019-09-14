@@ -167,9 +167,9 @@ const controller = {
         fc_showContinue();
         const vis_area = document.querySelector('#visualisation');
         vis.init(vis_area.clientWidth, vis_area.clientHeight);
-        vis.initModule(model.selected_module, model.getOptions());
+        vis.initModule(model.selected_module, model.getVisOptions());
         vis.initDimensions(model.dimensions, model.getSampleDimensions());
-        vis.initOptions(model.getOptions());
+        vis.initOptions(model.getVisOptions());
         vis.initPopulation(ds);
         // vis.initPreview(ds);
     },
@@ -202,17 +202,18 @@ const controller = {
         //     console.log(user_changed_options);
         //     updateUrl('options', JSON.stringify(user_changed_options));
         // }
+        let current_value = model.module_options[o.name];
+        if (current_value == new_val) return;
         model.setOption(o.name, new_val);
         user_changed_options[o.name] = new_val;
         console.log(user_changed_options);
         updateUrl('options', JSON.stringify(user_changed_options));
-        vis.initOptions(model.getOptions());
+        vis.initOptions(model.getVisOptions());
         let ds = model.populationDataset();
         vis.initPopulation(ds);
 
     },
     takeSamples: async function() {
-        return;
         let required_options = model.selected_module.options;
         let is_valid = true;
         for(let o in required_options){
@@ -229,7 +230,7 @@ const controller = {
         // });
         
         // let ds = model.populationDataset();
-        // vis.initOptions(model.getOptions());
+        // vis.initOptions(model.getVisOptions());
         // vis.initPopulation(ds);
         // vis.initSamples(samples, distribution);
         
@@ -242,7 +243,7 @@ const controller = {
         if(model.samples.length == 1000 && model.largeSampleFinished){
             ac_loadingDone();
             let ds = model.populationDataset();
-            vis.initOptions(model.getOptions());
+            vis.initOptions(model.getVisOptions());
             vis.initDimensions(model.dimensions, model.getSampleDimensions());
             vis.initPopulation(ds);
             vis.initSamples(model.samples, model.distribution);

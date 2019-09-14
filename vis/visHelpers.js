@@ -26,7 +26,7 @@ function createSectionLabels(labels, areas){
     }
 }
 
-function createStaticLabels(dimensions, bounds, container_svg){
+function createStaticLabels(dimensions, bounds, container_svg, is_population){
     let label_group = container_svg.querySelector('#labelGroup');
     if (!document.body.contains(label_group)){
         container_svg.insertAdjacentHTML("beforeend", "<g id = 'labelGroup'></g>");
@@ -55,7 +55,7 @@ function createStaticLabels(dimensions, bounds, container_svg){
 
 
 
-function createElementsFromDataset(dataset, options, bounds, domain, range, dimensions, svg_name, container_svg){
+function createElementsFromDataset(dataset, options, bounds, domain, range, dimensions, svg_name, container_svg, is_population){
     let label_group = container_svg.querySelector(`#${svg_name}`);
     if (!document.body.contains(label_group)){
         container_svg.insertAdjacentHTML("beforeend", `<g id = '${svg_name}'></g>`);
@@ -73,16 +73,16 @@ function createElementsFromDataset(dataset, options, bounds, domain, range, dime
 
             let factor_group = null;
             if(dimensions[0].type == 'numeric'){
-                factor_group = createDatapointHeap(data, factor_bounds, bounds, domain, range, num_factors, `#y_factor_${f}`, f)
+                factor_group = createDatapointHeap(data, factor_bounds, bounds, domain, range, num_factors, `#y_factor_${f}`, f, is_population)
             }else{
-                factor_group = createProportionBar(data, factor_bounds, bounds, domain, range, num_factors, `#y_factor_${f}`, f, dimensions)
+                factor_group = createProportionBar(data, factor_bounds, bounds, domain, range, num_factors, `#y_factor_${f}`, f, dimensions, is_population)
             }
             label_group.insertAdjacentElement('beforeend', factor_group);
         }
     
 }
 
-function createProportionBar(data, factor_bounds, bounds, domain, range, num_factors, name, factor_id, dimensions){
+function createProportionBar(data, factor_bounds, bounds, domain, range, num_factors, name, factor_id, dimensions, is_population){
     let group = document.createElementNS("http://www.w3.org/2000/svg", 'g');
     group.id = name;
 
@@ -178,7 +178,7 @@ function createProportionBar(data, factor_bounds, bounds, domain, range, num_fac
     }
     return group;
 }
-function createDatapointHeap(data, factor_bounds, bounds, domain, range, num_factors, name, factor_id){
+function createDatapointHeap(data, factor_bounds, bounds, domain, range, num_factors, name, factor_id, is_population){
     const num_buckets = 300;
     let bucket_vals = data.map(e => Math.floor(linearScale(linearScale(e, domain, range), range, [0, num_buckets])));
     const bucket_counts = bucket_vals.reduce((a, c) => {a[c] ? a[c]++ : a[c] = 1; return a}, {});
@@ -208,7 +208,7 @@ function createDatapointHeap(data, factor_bounds, bounds, domain, range, num_fac
     return group;
 }
 
-function createStatMarkersFromDataset(dataset, options, areas, bounds, domain, range, dimensions, svg_name, container_svg){
+function createStatMarkersFromDataset(dataset, options, areas, bounds, domain, range, dimensions, svg_name, container_svg, is_population){
     
     let stat_group = container_svg.querySelector(`#${svg_name}`);
     if (!document.body.contains(stat_group)){
@@ -259,7 +259,7 @@ function createStatMarkersFromDataset(dataset, options, areas, bounds, domain, r
         
     }
 }
-function createAnalysisMarkersFromDataset(dataset, options, areas, bounds, domain, range, dimensions, svg_name, container_svg){
+function createAnalysisMarkersFromDataset(dataset, options, areas, bounds, domain, range, dimensions, svg_name, container_svg, is_population){
     let analysis_group = container_svg.querySelector(`#${svg_name}`);
     if (!document.body.contains(analysis_group)){
         container_svg.insertAdjacentHTML("beforeend", `<g id = '${svg_name}'></g>`);
@@ -269,13 +269,13 @@ function createAnalysisMarkersFromDataset(dataset, options, areas, bounds, domai
     let overall_stat = dataset.statistics.overall.point_stats[options.Statistic];
     let overall_stat_screen = linearScale(overall_stat, domain, range);
     
-    if(options.Analysis != "Difference"){
+    if((is_population ? options.popAnalysis : options.Analysis) != "Difference" && is_population){
         let main_stat_dotted = document.createElementNS("http://www.w3.org/2000/svg", 'line');
         main_stat_dotted.id = `analysis_mainstatdotted`;
         main_stat_dotted.setAttribute('x1', overall_stat_screen);
         main_stat_dotted.setAttribute('y1', areas.overall.top);
         main_stat_dotted.setAttribute('x2', overall_stat_screen);
-        main_stat_dotted.setAttribute('y2', options.Analysis == "Average Deviation" | options.Analysis == "F Stat" ? areas[`sec1display`].bottom : areas.overall.bottom);
+        main_stat_dotted.setAttribute('y2', (is_population ? options.popAnalysis : options.Analysis) == "Average Deviation" | (is_population ? options.popAnalysis : options.Analysis) == "F Stat" ? areas[`sec1display`].bottom : areas.overall.bottom);
         main_stat_dotted.setAttribute('data-stat', overall_stat);
         main_stat_dotted.style.stroke = "black";
         main_stat_dotted.style.strokeOpacity = "0.4";
@@ -285,7 +285,7 @@ function createAnalysisMarkersFromDataset(dataset, options, areas, bounds, domai
     const factor_labels = dimensions.length > 1 ? dimensions[1].factors : [""];
     const num_factors = factor_labels.length;
 
-    if(options.Analysis == "Difference"){
+    if((is_population ? options.popAnalysis : options.Analysis) == "Difference"){
         
         const factor_stat_1 = dataset.statistics.factor_2[factor_labels[0]].point_stats[options.Statistic];
         const factor_stat_1_screen = linearScale(factor_stat_1, domain, range);
@@ -297,7 +297,7 @@ function createAnalysisMarkersFromDataset(dataset, options, areas, bounds, domai
         const arrow_group = makeSVGArrow(factor_stat_1_screen, factor_stat_2_screen, arrow_y, arrow_y);
         analysis_group.insertAdjacentElement('beforeEnd', arrow_group);
     }
-    if(options.Analysis == "Average Deviation" || options.Analysis == "F Stat"){
+    if((is_population ? options.popAnalysis : options.Analysis) == "Average Deviation" || (is_population ? options.popAnalysis : options.Analysis) == "F Stat"){
         for(let f = 0; f < num_factors; f++){
             const factor_label = factor_labels[f];
             let factor_bounds = {left:bounds.innerLeft, right: bounds.innerRight, top:bounds.split(num_factors, f)[1], bottom: bounds.split(num_factors, f+1)[1]};
@@ -489,7 +489,7 @@ function createAnalysisMarkersFromDataset(dataset, options, areas, bounds, domai
 
     // }
 }
-function createAxis(scale, bounds, dimensions, svg_name, container_svg){
+function createAxis(scale, bounds, dimensions, svg_name, container_svg, is_population){
     let label_group = container_svg.querySelector(`#${svg_name}`);
     if (!document.body.contains(label_group)){
         container_svg.insertAdjacentHTML("beforeend", `<g id = '${svg_name}'></g>`);

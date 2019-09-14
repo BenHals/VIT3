@@ -41,7 +41,7 @@ function genOption(name, option, value){
     </div>`;
 }
 
-function generateOptionControls(old, module_name){
+function generateOptionControls(module_name){
 
     // Returns the html for the controls, and functions to populate fields.
     let generator = generateOptionControlsHTML;
@@ -109,8 +109,12 @@ function oc_valid(o, new_val){
 }
 function oc_refresh_option(name, option, value){
     let id = `${name.replace(/\s+/g, '')}Option`;
-    let panel = $(`#${id}Panel`);
-    let index = $("#options").children().index()
+    // let panel = $(`#${id}Panel`);
+    let panel = document.querySelector(`#${id}Panel`);
+    let options_panel = document.querySelector('#options');
+    if (!options_panel) return;
+    // let index = $("#options").children().index(id);
+    let index = Array.from(options_panel.children).indexOf(panel);
     panel.remove();
     if(index == 0){
         $(`#options`).prepend(genOption(name, option, value));

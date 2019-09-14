@@ -171,6 +171,22 @@ function pointValueAnalysis(stat_name){
         return group_stats.point_stats[stat_name];
     }];
 }
+function stdAnalysis(stat_name, dim){
+    return [stat_name, function(dp, group, total, group_stats, overall_stats, stat_name){
+        return d3.deviation(dp.map(e => e[dim]));
+        // return group_stats.point_stats[stat_name];
+    }];
+}
+function ciAnalysis(stat_name, dim){
+    return [stat_name, function(dp, group, total, group_stats, overall_stats, stat_name){
+        let se =  d3.deviation(dp.map(e => e[dim])) / Math.sqrt(dp.length);
+        let stat =  group_stats.point_stats[stat_name];
+        let multiplier = 1.96;
+        let ci_range = [stat - (multiplier * se), stat, stat + (multiplier * se)];
+        return ci_range;
+        // return group_stats.point_stats[stat_name];
+    }];
+}
 function deviationAnalysis(stat_name, dim_name){
     return [stat_name, function(dp, group, total, group_stats, overall_stats, stat_name){
         const overall_stat = overall_stats.overall.point_stats[stat_name];
