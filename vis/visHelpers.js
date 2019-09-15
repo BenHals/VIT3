@@ -356,7 +356,7 @@ function createSampleGhosts(all_samples, options, areas, bounds, domain, range, 
 
 function getDistributionStats(distribution){
     let single_values = Array.isArray(distribution[0]) ? distribution.map(e => e[1]) : distribution;
-    let sorted = [...single_values].sort()
+    let sorted = [...single_values].sort(function(a,b){return a - b})
     let index_5 = Math.floor(sorted.length * 0.05);
     let index_95 = Math.floor(sorted.length * 0.95);
     return {q5: sorted[index_5], q95: sorted[index_95], std: d3.deviation(single_values)};
@@ -388,6 +388,7 @@ function createDistribution(distribution, options, areas, bounds, domain, range,
         let y_space_per_element = Math.min(y_space / num_elements, bounds.radius);
         for(let d = 0; d < distribution.length; d++){
             let [ci_left, ci_center, ci_right] = distribution[d];
+            let in_ci = get_in_ci(distribution[d]);
             let distrubution_group = document.createElementNS("http://www.w3.org/2000/svg", 'g');
             distrubution_group.id = `distribution-${d}`;
             distribution_container.insertAdjacentElement('beforeend', distrubution_group);
@@ -404,7 +405,7 @@ function createDistribution(distribution, options, areas, bounds, domain, range,
             distribution_element.setAttribute('y2', center);
             distribution_element.setAttribute('data-stat', ci_center);
             distribution_element.setAttribute('shape-rendering', 'crispEdges');
-            distribution_element.style.stroke = "black";
+            distribution_element.style.stroke = in_ci ? 'green' : "black";
             distribution_element.style.display = 'none';
             distrubution_group.insertAdjacentElement('beforeend', distribution_element);
         }

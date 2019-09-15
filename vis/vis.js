@@ -189,6 +189,9 @@ const vis = {
     initAnimation: function(reps, include_distribution, track, inherit_speed = false){
         this.initSample(this.current_sample, true);
         this.current_sample++;
+        if (reps > 0){
+            setTimeout(this.initAnimation.bind(this, reps - 1, include_distribution, track, inherit_speed), 100);
+        }
         // this.pause();
         // this.reps_left = reps - 1;
         // // let speed = this.speed || 1 + 0.75*(reps - 1);
