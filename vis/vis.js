@@ -28,16 +28,16 @@ const vis = {
     initOptions: function(options){
         this.options = options;
     },
-    initDataset(dataset, dimensions, container_svg, area, name, is_population){
+    initDataset(dataset, dimensions, container_svg, area, name, is_population, domain, range){
         const svg = document.querySelector(container_svg); 
-        const domain = [dataset.statistics.overall.point_stats.Min, dataset.statistics.overall.point_stats.Max];
-        const range = [this.areas[`${area}axis`].innerLeft  + this.areas[`${area}axis`].margin, this.areas[`${area}axis`].innerRight - this.areas[`${area}axis`].margin];
+        const ds_domain = domain || [dataset.statistics.overall.point_stats.Min, dataset.statistics.overall.point_stats.Max];
+        const ds_range = range || [this.areas[`${area}axis`].innerLeft  + this.areas[`${area}axis`].margin, this.areas[`${area}axis`].innerRight - this.areas[`${area}axis`].margin];
         createStaticLabels(dimensions, this.areas[`${area}display`], svg, is_population);
-        createElementsFromDataset(dataset, this.options, this.areas[`${area}display`], domain, range, dimensions, name, svg, is_population);
-        createStatMarkersFromDataset(dataset, this.options, this.areas, this.areas[`${area}display`], domain, range, dimensions, `${name}_stats`, svg, is_population);
-        createAnalysisMarkersFromDataset(dataset, this.options, this.areas, this.areas[`${area}display`], domain, range, dimensions, `${name}_analysis`, svg, is_population);
-        scale = d3.scaleLinear().domain(domain).nice();
-        scale.range(range)
+        createElementsFromDataset(dataset, this.options, this.areas[`${area}display`], ds_domain, ds_range, dimensions, name, svg, is_population);
+        createStatMarkersFromDataset(dataset, this.options, this.areas, this.areas[`${area}display`], ds_domain, ds_range, dimensions, `${name}_stats`, svg, is_population);
+        createAnalysisMarkersFromDataset(dataset, this.options, this.areas, this.areas[`${area}display`], ds_domain, ds_range, dimensions, `${name}_analysis`, svg, is_population);
+        let scale = d3.scaleLinear().domain(ds_domain).nice();
+        scale.range(ds_range)
         createAxis(scale, this.areas[`${area}axis`], dimensions, `${name}_axis`, svg, is_population)
 
         return [scale];
@@ -45,151 +45,133 @@ const vis = {
     initPopulation: function(dataset){
         clearSvg('popSVG');
         createSectionLabels(this.module.labels, this.areas);
-        [this.population_scale] = this.initDataset(dataset, this.population_dimensions, '#popSVG', 'sec0', 'population', true); 
+        this.population_dataset = dataset;
+        this.population_domain = [dataset.statistics.overall.point_stats.Min, dataset.statistics.overall.point_stats.Max];
+        this.population_range = [this.areas[`sec0axis`].innerLeft  + this.areas[`sec0axis`].margin, this.areas[`sec0axis`].innerRight - this.areas[`sec0axis`].margin];
+        [this.population_scale] = this.initDataset(dataset, this.population_dimensions, '#popSVG', 'sec0', 'population', true, this.population_domain, this.population_range); 
     },
     initSamples: function(samples, distribution){
-        this.current_sample - 0;
+        this.current_sample = 0;
         this.samples = samples;
         this.distribution = distribution;
         clearSvg('dynamicSVG');
-        this.initDataset(this.samples[0], this.sample_dimensions, '#dynamicSVG', 'sec1', 'sample_0', false); 
-
-        this.initDistribution(this.distribution);
+        clearSvg('ghostSVG');
+        this.initSampleGhosts(this.sample_dimensions, '#ghostSVG', 'sec1', this.population_domain, this.population_range);
+        this.initDistribution(this.distribution, this.sample_dimensions, '#ghostSVG', 'sec2', this.population_domain, this.population_range);
+        this.initSample(this.current_sample, true);
+        
         //this.initSample(this.samples[this.current_sample], this.dynamicElements.distribution.stats[this.current_sample], true);
         
-        this.drawDynamic();
+        // this.drawDynamic();
+    },
+    initSample: function(sample_id, dist){
+        clearSvg('dynamicSVG');
+        let sample_ghost_container = document.querySelector(`#sample-${sample_id}-ghosts`);
+        let sample_ghosts = sample_ghost_container.querySelectorAll('*');
+        for(ghost of sample_ghosts){
+            ghost.style.removeProperty('display');
+        }
+        let distribution_container = document.querySelector(`#distribution-${sample_id}`);
+        let distributions = distribution_container.querySelectorAll('*');
+        for(dist of distributions){
+            dist.style.removeProperty('display');
+        }
+        this.initDataset(this.samples[sample_id], this.sample_dimensions, '#dynamicSVG', 'sec1', `sample_${sample_id}`, false, this.population_domain, this.population_range); 
+        dd_updateDatapoints(this.samples[sample_id], this.population_dimensions, this.sample_dimensions);
     },
     initPreview: function(dataset){
-        clearSvg('popSvgContainer');
-        this.dataset = dataset;
-        let statistic = this.options.Statistic;
-        let datapoints = elementsFromDataset(dataset, this.population_dimensions, this.areas["sec0display"], this.options, statistic);
-        
-        
-        this.staticElements.datapoints = datapoints;
-        this.staticElements.all = [].concat(datapoints.all);
 
-        let factor_labels = labelsFromDimensions(this.population_dimensions, this.areas["sec0display"], this.options);
-        this.staticElements.factor_labels = factor_labels;
-        this.staticElements.all = this.staticElements.all.concat(factor_labels);
-
-        let section_labels = labelsFromModule(this.module.labels, this.areas, this.options);
-        this.staticElements.section_labels = section_labels;
-        this.staticElements.all = this.staticElements.all.concat(section_labels);
-
-        if(this.population_dimensions[0].type == 'numeric'){
-            this.popMax = this.staticElements.datapoints.all.reduce((a, c)=> c.attrs[this.population_dimensions[0].name] > a ? c.attrs[this.population_dimensions[0].name] : a, -100000);
-            this.popMin = this.staticElements.datapoints.all.reduce((a, c)=> c.attrs[this.population_dimensions[0].name] < a ? c.attrs[this.population_dimensions[0].name] : a, 100000);
-            let scale = d3.scaleLinear().domain([this.popMin, this.popMax]).nice();
-            let extent = scale.domain();
-            this.popMax = extent[1];
-            this.popMin = extent[0];
-
-        }else{
-            this.popMax = 1;
-            this.popMin = 0;
-        }
-        placeElements(datapoints, this.population_dimensions, this.areas["sec0display"], this.options, this.popMin, this.popMax);
-        this.drawStatic();
     },
-    initDistribution: function(distribution){
-        let statistic = this.options.Statistic;
-        let min = 0;
-        let max = 1;
-        if(statistic == "Slope"){
-            max = distribution.reduce((a, c)=> c.point_value > a ? c.point_value : a, -100000);
-            min = distribution.reduce((a, c)=> c.point_value < a ? c.point_value : a, 100000);
-            min =Math.min(min, 0);
-            max = Math.max(0, max);
-        }else if(this.sample_dimensions.length < 2 && statistic == 'proportion'){
-            max = 1;
-            min = 0; 
-        }else if(this.sample_dimensions.length > 1 && this.sample_dimensions[1].factors.length == 2){
-            max = 0 + (this.popMax - this.popMin)/2;
-            min = 0 - (this.popMax - this.popMin)/2; 
-        }else if(this.sample_dimensions.length > 1 && this.sample_dimensions[1].factors.length > 2){
-            max = 0 + (this.popMax - this.popMin);
-            min = 0; 
-        }else {
-            max = this.popMax;
-            min = this.popMin; 
-        }
+    initSampleGhosts: function(dimensions, container_svg, area, domain, range){
+        const ds_domain = domain;
+        const ds_range = range;
+        const svg = document.querySelector(container_svg); 
+        let sample_elements = createSampleGhosts(this.samples, this.options, this.areas, this.areas[`${area}display`], ds_domain, ds_range, dimensions, `sample-ghosts-container`, svg, false);
         
-        let area_heap = this.areas["sec2display"];
-        let area_stat = this.areas["sec1display"];
-        let area_axis = this.areas["sec2axis"];
-        let vertical = false;
-        if(this.sample_dimensions.length == 2 && this.sample_dimensions[0].type == 'numeric' && this.sample_dimensions[1].type == 'numeric'){
-            area_heap = this.areas["sec2regRdisplay"];
-            area_stat = this.areas["sec2regLdisplay"];
-            area_axis = this.areas["sec2regRaxis"];
-            vertical = true;
+    },
+    
+    initDistribution: function(distribution, dimensions, container_svg, area, domain, range){
+
+        let distribution_stats = getDistributionStats(distribution);
+        let get_in_ci = (dp) => {return this.module.inCI(distribution_stats, this.population_dataset.statistics, this.population_dataset.statistics.overall.analysis[this.options.Statistic][this.options.popAnalysis], dp)};
+        let ds_domain = domain;
+        const ds_range = range;
+        if(this.options.Analysis == "Difference"){
+            let domain_width = domain[1] - domain[0];
+            ds_domain = [0 - domain_width/2, 0 + domain_width / 2];
         }
-        let [datapoints, stats, ci, extra] = elementsFromDistribution(
-                distribution,
-                this.samples,
-                this.sample_dimensions,
-                area_stat, this.options,
-                this.popMin,
-                this.popMax,
-                min,
-                max,
-                this.module.inCI,
-                getPopulationStatistic(this.dataset, statistic, this.dimensions),
-                this.dataset.largeCI
-            );
-        placeDistribution(datapoints, ci, area_heap, vertical, min, max, this.staticElements.stat_markers, this.dataset.largeCI);
-        this.dynamicElements.distribution = {};
-        this.dynamicElements.distribution.datapoints = datapoints;
-        let prev_all = this.dynamicElements.all || [];
-        //this.dynamicElements.all = prev_all.concat(datapoints);
-        this.dynamicElements.distribution.stats = stats;
-        this.dynamicElements.distribution.ci = ci;
+        if(this.options.Analysis == "Average Deviation" || this.options.Analysis == "F Stat"){
+            let domain_width = domain[1] - domain[0];
+            ds_domain = [0, 0 + domain_width];
+        }
+        let scale = d3.scaleLinear().domain(ds_domain).nice();
+        scale.range(ds_range)
+        const svg = document.querySelector(container_svg); 
+        let sample_elements = createDistribution(distribution, this.options, this.areas, this.areas[`${area}display`], ds_domain, ds_range, dimensions, `distribution-container`, svg, false, get_in_ci);
+        createAxis(scale, this.areas[`${area}axis`], dimensions, `${name}_axis`, svg, false)
+        // let statistic = this.options.Statistic;
+        // let min = 0;
+        // let max = 1;
+        // if(statistic == "Slope"){
+        //     max = distribution.reduce((a, c)=> c.point_value > a ? c.point_value : a, -100000);
+        //     min = distribution.reduce((a, c)=> c.point_value < a ? c.point_value : a, 100000);
+        //     min =Math.min(min, 0);
+        //     max = Math.max(0, max);
+        // }else if(this.sample_dimensions.length < 2 && statistic == 'proportion'){
+        //     max = 1;
+        //     min = 0; 
+        // }else if(this.sample_dimensions.length > 1 && this.sample_dimensions[1].factors.length == 2){
+        //     max = 0 + (this.popMax - this.popMin)/2;
+        //     min = 0 - (this.popMax - this.popMin)/2; 
+        // }else if(this.sample_dimensions.length > 1 && this.sample_dimensions[1].factors.length > 2){
+        //     max = 0 + (this.popMax - this.popMin);
+        //     min = 0; 
+        // }else {
+        //     max = this.popMax;
+        //     min = this.popMin; 
+        // }
+        
+        // let area_heap = this.areas["sec2display"];
+        // let area_stat = this.areas["sec1display"];
+        // let area_axis = this.areas["sec2axis"];
+        // let vertical = false;
+        // if(this.sample_dimensions.length == 2 && this.sample_dimensions[0].type == 'numeric' && this.sample_dimensions[1].type == 'numeric'){
+        //     area_heap = this.areas["sec2regRdisplay"];
+        //     area_stat = this.areas["sec2regLdisplay"];
+        //     area_axis = this.areas["sec2regRaxis"];
+        //     vertical = true;
+        // }
+        // let [datapoints, stats, ci, extra] = elementsFromDistribution(
+        //         distribution,
+        //         this.samples,
+        //         this.sample_dimensions,
+        //         area_stat, this.options,
+        //         this.popMin,
+        //         this.popMax,
+        //         min,
+        //         max,
+        //         this.module.inCI,
+        //         getPopulationStatistic(this.dataset, statistic, this.dimensions),
+        //         this.dataset.largeCI
+        //     );
+        // placeDistribution(datapoints, ci, area_heap, vertical, min, max, this.staticElements.stat_markers, this.dataset.largeCI);
+        // this.dynamicElements.distribution = {};
+        // this.dynamicElements.distribution.datapoints = datapoints;
+        // let prev_all = this.dynamicElements.all || [];
+        // //this.dynamicElements.all = prev_all.concat(datapoints);
+        // this.dynamicElements.distribution.stats = stats;
+        // this.dynamicElements.distribution.ci = ci;
         
 
-        let axis = axisFromDataset(area_axis, min, max, vertical);
-        this.staticElements.dist_axis = axis;
-        this.staticElements.all = this.staticElements.all.concat(axis);
+        // let axis = axisFromDataset(area_axis, min, max, vertical);
+        // this.staticElements.dist_axis = axis;
+        // this.staticElements.all = this.staticElements.all.concat(axis);
 
-        if(extra) this.staticElements.ontop = this.staticElements.ontop.concat(extra);
+        // if(extra) this.staticElements.ontop = this.staticElements.ontop.concat(extra);
 
-        this.drawDynamic();
+        // this.drawDynamic();
     },
-    initSample: function(dataset, stats, dist){
-        clearSvg('dynSvgContainer');
-        clearSvgTextLines('popSvgContainer');
-        let statistic = this.options.Statistic;
-        let datapoints = elementsFromDataset(dataset, this.sample_dimensions, this.areas["sec1display"], this.options, statistic);
-        placeElements(datapoints, this.sample_dimensions, this.areas["sec1display"], this.options, this.popMin, this.popMax);
-        this.dynamicElements.datapoints = datapoints;
-        if(dist) {
-            this.initSampleDistElements(datapoints);
-        }else{
-            this.dynamicElements.all = this.dynamicElements.all.concat(datapoints.all);
-        }
 
-        let factor_labels = labelsFromDimensions(this.sample_dimensions, this.areas["sec1display"], this.options);
-        this.dynamicElements.factor_labels = factor_labels;
-        this.dynamicElements.all = this.dynamicElements.all.concat(factor_labels);
-
-        // let section_labels = labelsFromModule(this.module.labels, this.areas, this.options);
-        // this.dynamicElements.section_labels = section_labels;
-        // this.dynamicElements.all = this.dynamicElements.all.concat(section_labels);
-
-        let sample_stat_markers = statisticsFromElements(this.dynamicElements.datapoints, this.sample_dimensions, this.areas["sec1display"], this.options, this.dataset, this.popMin, this.popMax);
-        if(!this.dynamicElements.stat_markers) this.dynamicElements.stat_markers = [];
-        this.dynamicElements.stat_markers = this.dynamicElements.stat_markers.concat(sample_stat_markers);
-        this.dynamicElements.all = this.dynamicElements.all.concat(sample_stat_markers);
-
-        let axis = axisFromDataset(this.areas["sec1axis"], this.popMin, this.popMax, false, 'sample_axis');
-        this.staticElements.sample_axis = axis;
-        this.staticElements.all = this.staticElements.all.filter((e)=>e.id != 'sample_axis').concat(this.staticElements.sample_axis);
-
-        this.drawDynamic();
-        this.drawStatic();
-        this.drawStaticOnTop();
-        dd_updateDatapoints(dataset, this.population_dimensions, this.sample_dimensions);
-    },
     initSampleDistElements(datapoints){
         this.dynamicElements.all = [].concat(datapoints.all);
         this.dynamicElements.ghosts = [];
@@ -205,49 +187,51 @@ const vis = {
         this.dynamicElements.all.push(this.dynamicElements.distribution.datapoints[this.current_sample]);
     },
     initAnimation: function(reps, include_distribution, track, inherit_speed = false){
-        this.pause();
-        this.reps_left = reps - 1;
-        // let speed = this.speed || 1 + 0.75*(reps - 1);
-        let speed = inherit_speed ? this.speed : (1 + 0.75*(reps - 1)) * (1 + 1 * include_distribution);
-        this.speed = speed;
-        this.include_distribution = include_distribution;
-        let animation = new Animation(`${reps}:${include_distribution}`);
-        if(reps < 900){
-            if(this.current_sample >= 1000){
-                this.current_sample = 0;
-                this.dynamicElements.all = [];
-            }
-            this.initSample(this.samples[this.current_sample], this.dynamicElements.distribution.stats[this.current_sample], true);
+        this.initSample(this.current_sample, true);
+        this.current_sample++;
+        // this.pause();
+        // this.reps_left = reps - 1;
+        // // let speed = this.speed || 1 + 0.75*(reps - 1);
+        // let speed = inherit_speed ? this.speed : (1 + 0.75*(reps - 1)) * (1 + 1 * include_distribution);
+        // this.speed = speed;
+        // this.include_distribution = include_distribution;
+        // let animation = new Animation(`${reps}:${include_distribution}`);
+        // if(reps < 900){
+        //     if(this.current_sample >= 1000){
+        //         this.current_sample = 0;
+        //         this.dynamicElements.all = [];
+        //     }
+        //     this.initSample(this.samples[this.current_sample], this.dynamicElements.distribution.stats[this.current_sample], true);
             
-            ma_createAnimation(animation, this.population_dimensions, this.sample_dimensions, this.staticElements, this.dynamicElements, this.module, speed, this.current_sample, include_distribution, track);
-            this.animation = animation;
-            this.animation.start();
-            this.current_sample = (this.current_sample + 1)%(this.samples.length);
-        }else{
-            if(this.current_sample >= 1000){
-                this.current_sample = 0;
-                this.dynamicElements.all = [];
-            }
-            this.dynamicElements.all = [];
-            for(let i = 0; i < this.dynamicElements.distribution.stats.length; i++){
-                this.dynamicElements.all = this.dynamicElements.all.concat(this.dynamicElements.distribution.stats[i]);
-                this.dynamicElements.all = this.dynamicElements.all.concat([this.dynamicElements.distribution.datapoints[i]]);
-            }
-            ma_createDistributionAnimation(animation, this.population_dimensions, this.sample_dimensions, this.staticElements, this.dynamicElements, this.module, 1, this.current_sample);
-            this.animation = animation;
-            this.animation.start();
-            this.current_sample = 1000;
-            this.reps_left = 0;
-        }
-        this.last_animation_type = "normal";
-        [this.current_stage, this.current_animation_percent]  = this.animation.progress_time(window.performance.now());
-        this.paused = false;
-        ac_unpause();
-        this.last_frame = window.performance.now();
-        if(!this.loop_started) {
-            this.loop(window.performance.now(), true);
-            this.loop_started = true;
-        }
+        //     ma_createAnimation(animation, this.population_dimensions, this.sample_dimensions, this.staticElements, this.dynamicElements, this.module, speed, this.current_sample, include_distribution, track);
+        //     this.animation = animation;
+        //     this.animation.start();
+        //     this.current_sample = (this.current_sample + 1)%(this.samples.length);
+        // }else{
+        //     if(this.current_sample >= 1000){
+        //         this.current_sample = 0;
+        //         this.dynamicElements.all = [];
+        //     }
+        //     this.dynamicElements.all = [];
+        //     for(let i = 0; i < this.dynamicElements.distribution.stats.length; i++){
+        //         this.dynamicElements.all = this.dynamicElements.all.concat(this.dynamicElements.distribution.stats[i]);
+        //         this.dynamicElements.all = this.dynamicElements.all.concat([this.dynamicElements.distribution.datapoints[i]]);
+        //     }
+        //     ma_createDistributionAnimation(animation, this.population_dimensions, this.sample_dimensions, this.staticElements, this.dynamicElements, this.module, 1, this.current_sample);
+        //     this.animation = animation;
+        //     this.animation.start();
+        //     this.current_sample = 1000;
+        //     this.reps_left = 0;
+        // }
+        // this.last_animation_type = "normal";
+        // [this.current_stage, this.current_animation_percent]  = this.animation.progress_time(window.performance.now());
+        // this.paused = false;
+        // ac_unpause();
+        // this.last_frame = window.performance.now();
+        // if(!this.loop_started) {
+        //     this.loop(window.performance.now(), true);
+        //     this.loop_started = true;
+        // }
 
     },
     initCIAnimation(large){

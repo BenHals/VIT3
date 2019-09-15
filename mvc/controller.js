@@ -263,7 +263,7 @@ const controller = {
     initAnimation: function(num_samples, include_distribution, track){
         console.log(num_samples +":"+include_distribution);
         vis.initAnimation(num_samples, include_distribution, track);
-        controller.unpause();
+        // controller.unpause();
     },
     animationDone(){
         return;

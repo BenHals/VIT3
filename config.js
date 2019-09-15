@@ -46,7 +46,7 @@ const config = {
     //     }
     // },
     initStatisticAnalysis: function(dimensions){
-            if(dimensions.length < 2) return ["Point Value"];
+            if(dimensions.length < 2) return ["Point Value", "Confidence Interval"];
             if((dimensions[1].type == 'categoric' &&
             dimensions[1].factors.length < 3)){
                 return ["Difference"];
@@ -150,22 +150,26 @@ config.modules =  {
             let sample_size = {name: 'Sample Size', type: "number", range: [0, 'max'], default: 10, validate: (v, o)=> (v > o.range[0] && v < o.range[1])};
             this.options.push(sample_size);
         },
-        inCI: function(distribution_sorted, dist_element, population_statistic){
-            let top_index = Math.floor(distribution_sorted.length * 0.95);
-            let middle_95 = distribution_sorted.slice(0, top_index);
-            return middle_95.includes(dist_element);
+        inCI: function(dist_stats, population_stats, population_stats, dist_val){
+            return dist_val >= dist_stats.q5 && dist_val <= dist_stats.q95;
+            // let top_index = Math.floor(distribution_sorted.length * 0.95);
+            // let middle_95 = distribution_sorted.slice(0, top_index);
+            // return middle_95.includes(dist_element);
         },
         generateInCi: function(dimensions){
             if(dimensions.length < 1) return;
             if(dimensions.length > 1 && dimensions[1].factors.length > 2){
-                this.inCI = function(distribution_sorted, dist_element, population_statistic){
+                this.inCI = function(dist_stats, population_stats, population_stats, dist_val){
+                    return dist_val >= dist_stats.q5 && dist_val <= dist_stats.q95;
+                    
                     return Array.isArray(dist_element) ? dist_element[1] : dist_element > population_statistic;
                 }
             }else{
-                this.inCI = function(distribution_sorted, dist_element, population_statistic){
-                    let top_index = Math.floor(distribution_sorted.length * 0.95);
-                    let middle_95 = distribution_sorted.slice(0, top_index);
-                    return middle_95.includes(dist_element);
+                this.inCI = function(dist_stats, population_stats, population_stats, dist_val){
+                    return dist_val >= dist_stats.q5 && dist_val <= dist_stats.q95;
+                    // let top_index = Math.floor(distribution_sorted.length * 0.95);
+                    // let middle_95 = distribution_sorted.slice(0, top_index);
+                    // return middle_95.includes(dist_element);
                 }
             }
             

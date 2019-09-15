@@ -30,6 +30,7 @@ const view = {
     loadCanvas: function(){
         $('#visualisation').html(`<div id="canvasWrapper">
             <svg id="popSVG" class="mainCanvas"><g id="popSvgContainer"></g></svg>
+            <svg id="ghostSVG" class="mainCanvas"><g id="ghostSVGContainer"></g></svg>
             <svg id="dynamicSVG" class="mainCanvas"><g id="dynSvgContainer"></g></svg>
             </div>`);
         this.resizeCanvas(true);
@@ -43,12 +44,16 @@ const view = {
             $('#dynamicSVG').attr('data-normWidth', vis_width);
             $('#dynamicSVG').attr('data-normHeight', vis_height);
             $('#popSVG').attr('data-normWidth', vis_width);
+            $('#ghostSVG').attr('data-normWidth', vis_width);
             $('#popSVG').attr('data-normHeight', vis_height);
+            $('#ghostSVG').attr('data-normHeight', vis_height);
             
             $('#dynamicSVG').attr('width', vis_width);
             $('#dynamicSVG').attr('height', vis_height);
             $('#popSVG').attr('width', vis_width);
+            $('#ghostSVG').attr('width', vis_width);
             $('#popSVG').attr('height', vis_height);
+            $('#ghostSVG').attr('height', vis_height);
         }
         let scale_factor = $('#popSVG').attr('width') / ($('#popSVG').attr('data-normWidth'))
         let canvas_rect = document.getElementById('canvasWrapper');
@@ -65,11 +70,15 @@ const view = {
         $('#dynamicSVG').attr('transform', "scale("+scale_factor+",1) translate("+(canvas_rect.left - dRect.left)/scale_factor+",0)");
 
         //$('#popSVG').attr('width', vis_width);
-        //$('#popSVG').attr('height', vis_height);
+        //$('#ghostSVG').attr('height', vis_height);
         $('#popSVG').attr('transform', "scale("+scale_factor+",1)");
+        $('#ghostSVG').attr('transform', "scale("+scale_factor+",1)");
         let pRect = document.getElementById('popSVG').getBoundingClientRect();
+        let gRect = document.getElementById('ghostSVG').getBoundingClientRect();
         //$('#popSVG').attr('transform', "translate("+$('#popSVG').attr('width')/2+","+$('#popSVG').attr('height')/2 + ") scale("+scale_factor+",1) translate("+-1*$('#popSVG').attr('width')/2+","+-1*$('#popSVG').attr('height')/2 + ")");
+        //$('#ghostSVG').attr('transform', "translate("+$('#popSVG').attr('width')/2+","+$('#popSVG').attr('height')/2 + ") scale("+scale_factor+",1) translate("+-1*$('#popSVG').attr('width')/2+","+-1*$('#popSVG').attr('height')/2 + ")");
         $('#popSVG').attr('transform', "scale("+scale_factor+",1) translate("+(canvas_rect.left - pRect.left)/scale_factor+",0)");
+        $('#ghostSVG').attr('transform', "scale("+scale_factor+",1) translate("+(canvas_rect.left - gRect.left)/scale_factor+",0)");
 
         return {"scale_x": 1, "scale_y": 1,  "PIXEL_RATIO": 1};
     }

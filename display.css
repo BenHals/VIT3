@@ -273,6 +273,10 @@ input[type="range"]::-webkit-slider-thumb {
     stroke: black;
     stroke-width: 2px;
   }
+  line.sample-ghost{
+    stroke: grey;
+    stroke-opacity: 0.2;
+  }
 
   .boxplot-line {
     stroke-opacity: 0.5;
@@ -280,6 +284,11 @@ input[type="range"]::-webkit-slider-thumb {
   }
 
   .datapoint {
+    fill: grey;
+    stroke: black;
+    fill-opacity: 0.7;
+  }
+  circle.distribution {
     fill: grey;
     stroke: black;
     fill-opacity: 0.7;
