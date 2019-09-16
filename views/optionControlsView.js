@@ -73,9 +73,9 @@ function oc_populateOptions(required_options){
         let option_name = option.name;
         let current_value = model.getOptions()[option_name];
         let input = genOption(option_name, option, current_value);
-        $("#options").append(input);
+        document.querySelector("#options").insertAdjacentHTML('beforeend', input);
         let change_func = (o) => function(e){
-            let new_val = $(this).val();
+            let new_val = e.target.value;
             let valid = o.validate(new_val, o);
             if(valid){
                 controller.setOption(o, new_val);
@@ -85,26 +85,27 @@ function oc_populateOptions(required_options){
             }
             
         };
-        $(`#${option_name.replace(/\s+/g, '')}OptionInput`).on('change', change_func(option) );
-        $(`#${option_name.replace(/\s+/g, '')}OptionInput`).val(current_value).trigger('change');
+        document.querySelector(`#${option_name.replace(/\s+/g, '')}OptionInput`).addEventListener('change', change_func(option) );
+        document.querySelector(`#${option_name.replace(/\s+/g, '')}OptionInput`).value = current_value
+        document.querySelector(`#${option_name.replace(/\s+/g, '')}OptionInput`).dispatchEvent(new Event('change'));
     }   
 }
 
 function oc_invalid(o, new_val){
     let id = `${o.name.replace(/\s+/g, '')}Option`;
-    $(`#${id}Panel`).removeClass('has-success');
-    $(`#${id}Panel .glyphicon`).removeClass('glyphicon-ok');
-    $(`#${id}Panel`).addClass('has-error');
-    $(`#${id}Panel .glyphicon`).addClass('glyphicon-warning-sign');
+    document.querySelector(`#${id}Panel`).classList.remove('has-success');
+    document.querySelector(`#${id}Panel .glyphicon`).classList.remove('glyphicon-ok');
+    document.querySelector(`#${id}Panel`).classList.add('has-error');
+    document.querySelector(`#${id}Panel .glyphicon`).classList.add('glyphicon-warning-sign');
     o.is_valid = false;
 }
 
 function oc_valid(o, new_val){
     let id = `${o.name.replace(/\s+/g, '')}Option`;
-    $(`#${id}Panel`).removeClass('has-error');
-    $(`#${id}Panel .glyphicon`).removeClass('glyphicon-warning-sign');
-    $(`#${id}Panel`).addClass('has-success');
-    $(`#${id}Panel .glyphicon`).addClass('glyphicon-ok');
+    document.querySelector(`#${id}Panel`).classList.remove('has-error');
+    document.querySelector(`#${id}Panel .glyphicon`).classList.remove('glyphicon-warning-sign');
+    document.querySelector(`#${id}Panel`).classList.add('has-success');
+    document.querySelector(`#${id}Panel .glyphicon`).classList.add('glyphicon-ok');
     o.is_valid = true;
 }
 function oc_refresh_option(name, option, value){
@@ -117,9 +118,9 @@ function oc_refresh_option(name, option, value){
     let index = Array.from(options_panel.children).indexOf(panel);
     panel.remove();
     if(index == 0){
-        $(`#options`).prepend(genOption(name, option, value));
+        document.querySelector(`#options`).insertAdjacentHTML('afterbegin', genOption(name, option, value));
     }else{
-        $(`#options>div:eq(${index-1})`).after(genOption(name, option, value));
+        document.querySelector(`#options>div:eq(${index-1})`).insertAdjacentHTML('afterend', genOption(name, option, value));
     }
     
 

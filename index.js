@@ -22,7 +22,8 @@ async function fastLoad(file_param){
     // Prefix is the type of file, E.G a preset on the server
     // or a url.
     // file_name is a url for a url file.
-    let [prefix, file_name] = file_param.split(':');
+    let [prefix, ...file_name] = file_param.split(':');
+    if (Array.isArray(file_name)) file_name = file_name.join(':');
     if(prefix == 'preset'){
         let p = await model.getExampleFile(file_name);
     }else if(prefix == 'url'){

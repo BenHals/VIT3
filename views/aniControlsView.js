@@ -1,6 +1,6 @@
 
 function generatevisualisationViewHTML(module){
-  if ($(window).width() < 768) {
+  if (window.width < 768) {
     // do something for small screens
     return `
     <div id="visualisationView">
@@ -123,7 +123,7 @@ function generatevisualisationViewHTML(module){
 }
 
 function generateAniControlsHTML_old(module_name, labels){
-  if ($(window).width() < 768) {
+  if (window.width < 768) {
     // do something for small screens
     return `
     <div id="visualisationView">
@@ -334,9 +334,9 @@ function ac_playAnimation(num_samples, include_distribution, track){
 }
 
 function ac_readNumSamples(input_elements){
-  let radioGroup = $("input:radio[name='"+input_elements+"']:checked");
-  let num = radioGroup.val();
-  let track = $('#trackpints').prop('checked');
+  let radioGroup = document.querySelector(`input[type="radio"][name='${input_elements}']:checked`);
+  let num = radioGroup.value;
+  let track = document.querySelector('#trackpints').getAttribute('checked');
   // Second parameter should be true if the distribution animation is playing.
   ac_playAnimation(num, input_elements=="distOptions", track && input_elements=="sampleOptions");
 }
@@ -347,66 +347,77 @@ function ac_showCI(large = false){
 function ac_showRandTestCI(large = false){
   controller.showCI(large, 'randTestCI');
 }
-$(document).on('change', 'input[type="radio"]', function(){
-  if(this.value == 1 && this.name == "sampleOptions"){
-    $('#trackpints').prop('disabled', false);
+document.addEventListener('click', function(e){
+  if(!e.target.matches('input[type="radio"]')) return;
+  if(e.target.value == 1 && e.target.name == "sampleOptions"){
+    document.querySelector('#trackpints').setAttribute('disabled', false);
   }else{
-    $('#trackpints').prop('disabled', true);
-    $('#trackpints').prop('checked', false);
+    document.querySelector('#trackpints').setAttribute('disabled', true);
+    document.querySelector('#trackpints').setAttribute('checked', false);
   }
-})
-$(document).on('input', '#visAnimProgress', function(e){
-  controller.visAnimUserInput(parseFloat($('#visAnimProgress').val()));
 });
-$(document).on('change', '#visAnimProgress', function(e){
-    //visAnimUserRelease(e);
+// $(document).on('change', 'input[type="radio"]', function(){
+//   if(this.value == 1 && this.name == "sampleOptions"){
+//     $('#trackpints').prop('disabled', false);
+//   }else{
+//     $('#trackpints').prop('disabled', true);
+//     $('#trackpints').prop('checked', false);
+//   }
+// })
+document.addEventListener('click', function(e){
+  if(!e.target.matches('#visAnimProgress')) return;
+  controller.visAnimUserInput(parseFloat(document.querySelector('#visAnimProgress').value));
 });
+// $(document).on('input', '#visAnimProgress', function(e){
+//   controller.visAnimUserInput(parseFloat($('#visAnimProgress').val()));
+// });
+
 // ********** Ani Control Updates **********
 function ac_initHide(module_name){
   return function(){
-    $('#visControls').hide();
+    document.querySelector('#visControls').style.display = 'none';
     if(module_name != 'Bootstrapping'){
-      $('#trackDiv').hide();
+      document.querySelector('#trackDiv').style.display = 'none';
     }else{
-      $('#trackDiv').show();
+      document.querySelector('#trackDiv').style.display = null;
     }
     if(module_name == "Bootstrapping"){
-      $('#CIButton').show();
-      $('#largeCIButton').show();
+      document.querySelector('#CIButton').style.display = null;
+      document.querySelector('#largeCIButton').style.display = null;
     }else{
-      $('#CIButton').hide();
-      $('#largeCIButton').hide();
+      document.querySelector('#CIButton').style.display = 'none';
+      document.querySelector('#largeCIButton').style.display = 'none';
     }
     if(module_name == "Randomisation Test"){
-      $('#RandTestCIButton').show();
-      $('#RandTestCIButton').show();
+      document.querySelector('#RandTestCIButton').style.display = null;
+      document.querySelector('#RandTestCIButton').style.display = null;
     }else{
-      $('#RandTestCIButton').hide();
-      $('#largeRandTestCIButton').hide();
+      document.querySelector('#RandTestCIButton').style.display = 'none';
+      document.querySelector('#largeRandTestCIButton').style.display = 'none';
     }
   }
 }
 function ac_unpause(){
-  $('#pausePlay span').removeClass('glyphicon-play');
-  $('#pausePlay span').addClass('glyphicon-pause');
+  document.querySelector('#pausePlay span').classList.remove('glyphicon-play');
+  document.querySelector('#pausePlay span').classList.add('glyphicon-pause');
 }
 
 function ac_pause(){
-  $('#pausePlay span').removeClass('glyphicon-pause');
-  $('#pausePlay span').addClass('glyphicon-play');
+  document.querySelector('#pausePlay span').classList.remove('glyphicon-pause');
+  document.querySelector('#pausePlay span').classList.add('glyphicon-play');
 }
 
 function ac_setPlaybackProgress(p){
-  $('#visAnimProgress').val(p);
+  document.querySelector('#visAnimProgress').value = p;
 }
 
 function ac_updateProgress(p){
-  $('#takeSamplesProgress').show();
-  $('#takeSamplesProgress').css('width', `${p*100}%`);
-  $('#visControls').hide();
+  document.querySelector('#takeSamplesProgress').style.display = null;
+  document.querySelector('#takeSamplesProgress').width =  `${p*100}%`;
+  document.querySelector('#visControls').style.display = 'none';
 }
 
 function ac_loadingDone(){
-  $('#visControls').show();
-  $('#takeSamplesProgressContainer').hide();
+  document.querySelector('#visControls').style.display = null;
+  document.querySelector('#takeSamplesProgressContainer').style.display = 'none';
 }
