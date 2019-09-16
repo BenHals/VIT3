@@ -503,7 +503,7 @@ function createDistribution(distribution, options, areas, bounds, domain, range,
         ci_container.insertAdjacentElement('beforeend', tail_ci_text);
         
     }else{
-        let num_elements = 50;
+        let num_elements = 20;
         let y_space = factor_bounds.bottom - factor_bounds.top;
         let y_space_per_element = Math.min(y_space / num_elements, bounds.radius);
         let tail_total = distribution.length;
@@ -522,8 +522,8 @@ function createDistribution(distribution, options, areas, bounds, domain, range,
             distrubution_group.id = `distribution-${d}`;
             distribution_container.insertAdjacentElement('beforeend', distrubution_group);
             
-            let bottom = factor_bounds.bottom - (y_space_per_element * d)
-            let top = factor_bounds.bottom - (y_space_per_element * (d + 1));
+            let bottom = factor_bounds.bottom - (y_space_per_element * (d % model.selected_module.sample_reset_index || 10000))
+            let top = factor_bounds.bottom - (y_space_per_element * ((d % model.selected_module.sample_reset_index || 10000) + 1));
             let center = top + (bottom - top);
             let distribution_element = document.createElementNS("http://www.w3.org/2000/svg", 'line');
             distribution_element.id = `sample-id${d}`;

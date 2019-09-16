@@ -127,6 +127,12 @@ const vis = {
             g.style.display = 'none';
         }
     },
+    hideDistribution: function(){
+        let ghosts = document.querySelectorAll('.distribution');
+        for(g of ghosts){
+            g.style.display = 'none';
+        }
+    },
     hideCI: function(){
         let ci = document.querySelectorAll('.ci');
         for(g of ci){
@@ -153,10 +159,13 @@ const vis = {
             this.current_sample = 0;
             this.hideGhosts();
         }
+        if(model.selected_module.sample_reset_index && this.current_sample % model.selected_module.sample_reset_index == 0){
+            this.hideDistribution();
+        }
 
         let self = this;
         let animation = {
-            total_duration: 10000 / speed,
+            total_duration: 1000 / speed,
             start: function(){
                 self.initSample(self.current_sample);
                 self.current_sample++;
@@ -278,6 +287,7 @@ const vis = {
         }
 
         if(!this.paused){
+            this.last_frame = ts;
             this.reqAnimationFrame = requestAnimationFrame(this.loop.bind(this));
         }
         

@@ -195,6 +195,7 @@ config.modules =  {
         baseHTML: generateModuleHTML,
         baseControls: generateFileControls,
         allowedVariables:[['n', null], ['c', null]],
+        sample_reset_index: 20,
         generateOptions: function(dimensions){
             if(dimensions.length < 1) return;
             this.options = [];
