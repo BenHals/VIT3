@@ -18,10 +18,10 @@ return `
             </span>
             </div>
             <div class="btn-group btn-block">
-                <button type="button" class="btn btn-primary dropdown-toggle btn-block" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <button type="button" id="presetDropdownButton" class="btn btn-primary dropdown-toggle btn-block" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Use an Example file... <span class="caret"></span>
                 </button>
-                <ul id= "presetDropdown" class="dropdown-menu">
+                <ul id= "presetDropdown" class="dropdown-menu" style = "display: none">
                 </ul>
             </div>
 
@@ -73,7 +73,8 @@ function generateColumnsHTML(columns, selected, selected_index = 0){
     html += (`<option class="list-group-item" value="None">None</option>`);
     for(var c in columns){
         let letter = columns[c][1].slice(0, 1);
-        let is_selected = $.inArray(columns[c][0], selected.slice(selected_index)) != -1;
+        // let is_selected = $.inArray(columns[c][0], selected.slice(selected_index)) != -1;
+        let is_selected = selected.slice(selected_index).includes(columns[c][0]);
         if(use_var_dropdown){
             is_selected = columns[c][0] == selected[selected_index];
         }
@@ -96,34 +97,59 @@ function fc_gotoHome(module_name){
 }
 
 function fc_localFile(){
-    let file = $('#localFile')[0].files[0];
+    let file_select = document.querySelector('#localFile');
+    let file = file_select.files[0];
     if(file){
         controller.localFileSelected(file);
     }
 }
 
 function fc_loadFromURL(){
-    let url = $("#urlInputField").val();
+    let url_input = document.querySelector('#urlInputField');
+    let url = url_input.value;
     if(url){
         controller.urlFileSelected(url);
     }
 }
 
-$(document).on('click', '.exampleItems', function(){
-    var data = this.innerText;
+document.addEventListener('click', function(e){
+    if (!e.target.classList.contains('exampleItems')) return;
+    var data = e.target.textContent;
     controller.exampleFileSelected(data);
+    document.querySelector('#presetDropdown').style.display = document.querySelector('#presetDropdown').style.display == "none" ? 'block' : 'none';
 });
+document.addEventListener('click', function(e){
+    if (e.target.id != 'presetDropdownButton') return;
 
-$(document).on('change', '.varselect', function(e){
-    $('.varAlert').remove();
+    document.querySelector('#presetDropdown').style.display = document.querySelector('#presetDropdown').style.display == "none" ? 'block' : 'none';
+});
+// $(document).on('click', '.exampleItems', function(){
+//     var data = this.innerText;
+//     controller.exampleFileSelected(data);
+// });
+document.addEventListener('change', function(e){
+    if (!e.target.classList.contains('varselect')) return;
+    let alert = document.querySelector('.varAlert')
+    if (alert) alert.remove();
+    // $('.varAlert').remove();
     //$('#focusPanel').addClass('invisible');
-    $('#focusPanel').hide();
+    document.querySelector('#focusPanel').style.display = 'none';
+    // $('#focusPanel').hide();
     controller.columnSelected(e);
 });
-
-$(document).on('change', '#focusSelect', function(e){
+// $(document).on('change', '.varselect', function(e){
+//     $('.varAlert').remove();
+//     //$('#focusPanel').addClass('invisible');
+//     $('#focusPanel').hide();
+//     controller.columnSelected(e);
+// });
+document.addEventListener('change', function(e){
+    if (e.target.id != 'focusSelect') return;
     controller.focusSelected(e);
 });
+// $(document).on('change', '#focusSelect', function(e){
+//     controller.focusSelected(e);
+// });
 
 function fc_selectedFileClicked(){
     return ;
@@ -137,31 +163,38 @@ function fc_sampleButtonClicked(){
 async function populateExampleFiles(){
     let example_files = await model.getExampleFileNames();
     let example_files_html = generateExampleFilesHTML(example_files);
-    $("#presetDropdown").html(example_files_html);
-    $('#var-error').hide();
+    document.querySelector("#presetDropdown").innerHTML = example_files_html;
+    // $("#presetDropdown").html(example_files_html);
+    document.querySelector('#var-error').style.display = 'none';
+    // $('#var-error').hide();
 }
 
 function fc_populateColumnSelect(columns, selected){
-    $('#variablePanel').removeClass('invisible');
+    document.querySelector('#variablePanel').classList.remove('invisible');
+    // $('#variablePanel').removeClass('invisible');
     //$('#variablePanel').show();
     if(! use_var_dropdown){
-        $('#variablePanel #variableSelect').attr('size', Math.min(columns.length, 10));
+        document.querySelector('#variablePanel #variableSelect').setAttribute('size', Math.min(columns.length, 10));
+        // $('#variablePanel #variableSelect').attr('size', Math.min(columns.length, 10));
     }
     
     let columns_html = generateColumnsHTML(columns, selected);
-    $('#variablePanel #variableSelect').html(columns_html);
+    document.querySelector('#variablePanel #variableSelect').innerHTML = columns_html;
+    // $('#variablePanel #variableSelect').html(columns_html);
     if(use_var_dropdown){
         let columns_html = generateColumnsHTML(columns, selected, 1);
-        $('#variablePanel #variableSelect2').html(columns_html);
+        document.querySelector('#variablePanel #variableSelect2').innerHTML = columns_html;
+        // $('#variablePanel #variableSelect2').html(columns_html);
     }
 
 }
 
 function fc_populateFocus(factors, focus){
-    $('#focusPanel').removeClass('invisible');
-    $('#focusPanel').show();
+    document.querySelector('#focusPanel').classList.remove('invisible');
+    document.querySelector('#focusPanel').classList.remove('invisible');
+    document.querySelector('#focusPanel').style.display = null;
     let focus_html = generateFocusHTML(factors, focus);
-    $('#focusPanel .panel-body').html(focus_html);
+    document.querySelector('#focusPanel .panel-body').innerHTML = focus_html;
 }
 
 function fc_showContinue(){
@@ -180,23 +213,23 @@ function fc_formatError(err){
 }
 
 function fc_tooManyVariables(err){
-    $('#var-error').text("Too many columns selected");
-    $('#var-error').show();
+    document.querySelector('#var-error').textContent("Too many columns selected");
+    document.querySelector('#var-error').style.display = null;
 }
 function fc_notEnoughVariables(err){
-    $('#var-error').text("Select a primary variable");
-    $('#var-error').show();
+    document.querySelector('#var-error').textContent("Select a primary variable");
+    document.querySelector('#var-error').style.display = null;
 }
 
 function fc_wrongModule(err){
-    $('#var-error').text("Wrong column types for module");
-    $('#var-error').show();
+    document.querySelector('#var-error').textContent("Wrong column types for module");
+    document.querySelector('#var-error').style.display = null;
 }
 
 function fc_showContinue(){
-    $('#sampleButton').show();
+    document.querySelector('#sampleButton').style.display = null;
 }
 
 function fc_clear_var_error(){
-    $('#var-error').hide();
+    document.querySelector('#var-error').style.display = 'none';
 }

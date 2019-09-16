@@ -206,13 +206,13 @@ config.modules =  {
             this.options.push(sample_size);
         },
         inCI: function(dist_stats, population_stats, population_stat, dist_val){
-            return population_stat >= dist_val[0] && population_stat <= dist_val[1];
+            return population_stat[1] >= dist_val[0] && population_stat[1] <= dist_val[2];
         },
         generateInCi: function(dimensions){
             if(dimensions.length < 1) return;
 
             this.inCI = function(dist_stats, population_stats, population_stat, dist_val){
-                return population_stat >= dist_val[0] && population_stat <= dist_val[1];
+                return population_stat[1] >= dist_val[0] && population_stat[1] <= dist_val[2];
             }
             
         },
@@ -295,7 +295,7 @@ config.modules =  {
         name: "Randomisation Variation",
         baseHTML: generateModuleHTML,
         baseControls: generateFileControls,
-        allowedVariables:[['n', null]],
+        allowedVariables:[['n', null], ['c', null]],
         sampleSize:config.sampleSizeOptions['popSize'],
         sampleGroups:config.randVarGroups.slice(0, 2),
         generateOptions: function(dimensions, num){

@@ -82,8 +82,10 @@ const controller = {
         if(!use_var_dropdown){
             selected_labels = [...Array.prototype.slice.call(e.target.selectedOptions)].map(function(option){return option.innerHTML.slice(0, option.innerHTML.length-4)});
         }else{
-            let var_select_main = $('#variablePanel #variableSelect').children("option:selected").val();
-            let var_select_secondary = $('#variablePanel #variableSelect2').children("option:selected").val();
+            let var_select_main = document.querySelector('#variablePanel > #variableSelect > option:checked').value;
+            let var_select_secondary = document.querySelector('#variablePanel > #variableSelect2 > option:checked').value;
+            // let var_select_main = $('#variablePanel #variableSelect').children("option:selected").val();
+            // let var_select_secondary = $('#variablePanel #variableSelect2').children("option:selected").val();
             if(var_select_main == undefined | var_select_main == "None"){
                 fc_notEnoughVariables();
                 return;
@@ -152,9 +154,10 @@ const controller = {
         this.doneSetup();
     },
     ddResized: function(dd_width){
-        let total_space = $("#display").innerWidth();
+        // let total_space = $("#display").innerWidth();
+        let total_space = document.querySelector("#display").clientWidth;
         let vis_space = total_space - dd_width;
-        this.resizeVis(vis_space, $("#display").innerHeight());
+        this.resizeVis(vis_space, document.querySelector("#display").clientHeight);
     },
     resizeVis: function(width, height){
         let {scale_x, scale_y, PIXEL_RATIO} = view.resizeCanvas();
@@ -256,7 +259,6 @@ const controller = {
     visAnimUserInput: function(new_progress){
         console.log(new_progress);
         if(vis.animation){
-            console.log(vis.animation.progress_percent(new_progress));
             vis.setProgress(new_progress);
         } 
     },
@@ -274,8 +276,6 @@ const controller = {
         }else if(type == 'randTestCI'){
             vis.initRandTestCIAnimation(large);
         }
-        
-        controller.unpause();
     },
     pause: function(){
         this.paused = true;

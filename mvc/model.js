@@ -231,8 +231,8 @@ const model = {
     },
 
     columnSelection: function(selected_labels, direct){
+        this.selected_columns = new Set();
         if(direct){
-            this.selected_columns = new Set();
             let selOptions = new Set(selected_labels);
             for (let index = 0; index < selected_labels.length; index++){
                 this.selected_columns.add(this.columns[selected_labels[index]]);

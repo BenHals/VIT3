@@ -263,7 +263,7 @@ function createStatMarkersFromDataset(dataset, options, areas, bounds, domain, r
         
     }
 }
-function createAnalysisMarkersFromDataset(dataset, options, areas, bounds, domain, range, dimensions, svg_name, container_svg, is_population){
+function createAnalysisMarkersFromDataset(dataset, options, areas, bounds, domain, range, dimensions, svg_name, container_svg, is_population, popdim_equals_sampledim){
     let analysis_group = container_svg.querySelector(`#${svg_name}`);
     if (!document.body.contains(analysis_group)){
         container_svg.insertAdjacentHTML("beforeend", `<g id = '${svg_name}'></g>`);
@@ -273,7 +273,7 @@ function createAnalysisMarkersFromDataset(dataset, options, areas, bounds, domai
     let overall_stat = dataset.statistics.overall.point_stats[options.Statistic];
     let overall_stat_screen = linearScale(overall_stat, domain, range);
     
-    if((is_population ? options.popAnalysis : options.Analysis) != "Difference" && is_population){
+    if((is_population ? options.popAnalysis : options.Analysis) != "Difference" && is_population && popdim_equals_sampledim){
         let main_stat_dotted = document.createElementNS("http://www.w3.org/2000/svg", 'line');
         main_stat_dotted.id = `analysis_mainstatdotted`;
         main_stat_dotted.setAttribute('x1', overall_stat_screen);
@@ -361,7 +361,7 @@ function getDistributionStats(distribution){
     let index_95 = Math.floor(sorted.length * 0.95);
     return {q5: sorted[index_5], q95: sorted[index_95], std: d3.deviation(single_values)};
 }
-function createDistribution(distribution, options, areas, bounds, domain, range, dimensions, svg_name, container_svg, is_population, get_in_ci){
+function createDistribution(distribution, options, areas, bounds, domain, range, dimensions, svg_name, container_svg, is_population, get_in_ci, pop_stat){
     let distribution_container = container_svg.querySelector(`#${svg_name}`);
     if (!document.body.contains(distribution_container)){
         container_svg.insertAdjacentHTML("beforeend", `<g id = '${svg_name}'></g>`);
@@ -371,28 +371,157 @@ function createDistribution(distribution, options, areas, bounds, domain, range,
     if(options.Analysis != 'Confidence Interval'){
         let distribution_points = createDatapointHeap(distribution, factor_bounds, bounds, domain, range, 1, 'distribution', 0, false, 'distribution', 'sample-id');
         let i = 0;
-        for(let p = 0; p < distribution_points.childNodes.length; p++){
+        let tail_total = distribution_points.childNodes.length;
+        let tail_count = 0;
+        let min_in_ci = null;
+        let max_in_ci = null;
+
+        for(let p = 0; p < tail_total; p++){
             let item = distribution_points.childNodes[0];
-            let in_ci = get_in_ci(item.getAttribute('data-stat'));
+            let data_stat = parseFloat(item.getAttribute('data-stat'));
+            let in_ci = get_in_ci(data_stat);
             let distrubution_group = document.createElementNS("http://www.w3.org/2000/svg", 'g');
-            distrubution_group.id = `distribution-${i}`;
+            distrubution_group.id = `distribution-${p}`;
             distribution_container.insertAdjacentElement('beforeend', distrubution_group);
             item.style.display = 'none';
             if (in_ci) item.style.fill = 'green';
             distrubution_group.insertAdjacentElement('beforeend', item);
             i++;
+
+            if(in_ci) {
+                tail_count++;
+                if(min_in_ci == null || data_stat < min_in_ci) min_in_ci = data_stat;
+                if(max_in_ci == null || data_stat > max_in_ci) max_in_ci = data_stat;
+            }
         }
+        let ci_container = document.createElementNS("http://www.w3.org/2000/svg", 'g');
+        distribution_container.insertAdjacentElement('beforeend', ci_container);
+        const left_ci_arrow = document.createElementNS("http://www.w3.org/2000/svg", 'line');
+        left_ci_arrow.id = "left-ci-arrow";
+        left_ci_arrow.classList.add("ci");
+        left_ci_arrow.setAttribute('x1', linearScale(min_in_ci, domain, range));
+        left_ci_arrow.setAttribute('x2', linearScale(min_in_ci, domain, range));
+        left_ci_arrow.setAttribute('y1', bounds.bottom - (bounds.bottom - bounds.top)/2);
+        left_ci_arrow.setAttribute('y2', bounds.bottom);
+        left_ci_arrow.style.display = 'none';
+        ci_container.insertAdjacentElement('beforeend', left_ci_arrow);
+        const left_ci_text = document.createElementNS("http://www.w3.org/2000/svg", 'text');
+        left_ci_text.id = "left-ci-text";
+        left_ci_text.classList.add("ci");
+        left_ci_text.setAttribute('x', linearScale(min_in_ci, domain, range) - 1);
+        left_ci_text.setAttribute('y', bounds.bottom);
+        left_ci_text.style.alignmentBaseline = 'ideographic';
+        left_ci_text.style.textAnchor = 'end';
+        left_ci_text.style.display = 'none';
+        left_ci_text.textContent = Math.round(min_in_ci * 100) / 100 ;
+        ci_container.insertAdjacentElement('beforeend', left_ci_text);
+        const right_ci_arrow = document.createElementNS("http://www.w3.org/2000/svg", 'line');
+        right_ci_arrow.id = "right-ci-arrow";
+        right_ci_arrow.classList.add("ci");
+        right_ci_arrow.setAttribute('x1', linearScale(max_in_ci, domain, range));
+        right_ci_arrow.setAttribute('x2', linearScale(max_in_ci, domain, range));
+        right_ci_arrow.setAttribute('y1', bounds.bottom - (bounds.bottom - bounds.top)/2);
+        right_ci_arrow.setAttribute('y2', bounds.bottom);
+        right_ci_arrow.style.display = 'none';
+        ci_container.insertAdjacentElement('beforeend', right_ci_arrow);
+        const right_ci_text = document.createElementNS("http://www.w3.org/2000/svg", 'text');
+        right_ci_text.id = "right-ci-text";
+        right_ci_text.classList.add("ci");
+        right_ci_text.setAttribute('x', linearScale(max_in_ci, domain, range) + 1);
+        right_ci_text.setAttribute('y', bounds.bottom);
+        right_ci_text.style.alignmentBaseline = 'ideographic';
+        right_ci_text.style.textAnchor = 'start';
+        right_ci_text.style.display = 'none';
+        right_ci_text.textContent = Math.round(max_in_ci * 100) / 100 ;
+        ci_container.insertAdjacentElement('beforeend', right_ci_text);
+        const top_ci_arrow = document.createElementNS("http://www.w3.org/2000/svg", 'line');
+        top_ci_arrow.id = "top-ci-arrow";
+        top_ci_arrow.classList.add("ci");
+        top_ci_arrow.setAttribute('x1', linearScale(min_in_ci, domain, range));
+        top_ci_arrow.setAttribute('x2', linearScale(max_in_ci, domain, range));
+        top_ci_arrow.setAttribute('y1', bounds.bottom - (bounds.bottom - bounds.top)/2);
+        top_ci_arrow.setAttribute('y2', bounds.bottom - (bounds.bottom - bounds.top)/2);
+        top_ci_arrow.style.display = 'none';
+        ci_container.insertAdjacentElement('beforeend', top_ci_arrow);
+
+        const top_ci_arrow_sec1 = document.createElementNS("http://www.w3.org/2000/svg", 'line');
+        top_ci_arrow_sec1.id = "top-ci-arrow";
+        top_ci_arrow_sec1.classList.add("ci");
+        top_ci_arrow_sec1.setAttribute('x1', linearScale(min_in_ci, domain, range));
+        top_ci_arrow_sec1.setAttribute('x2', linearScale(max_in_ci, domain, range));
+        top_ci_arrow_sec1.setAttribute('y1', areas['sec1display'].bottom - (areas['sec1display'].bottom - areas['sec1display'].top)/2);
+        top_ci_arrow_sec1.setAttribute('y2', areas['sec1display'].bottom - (areas['sec1display'].bottom - areas['sec1display'].top)/2);
+        top_ci_arrow_sec1.style.display = 'none';
+        ci_container.insertAdjacentElement('beforeend', top_ci_arrow_sec1);
+
+        const top_ci_arrow_sec0 = document.createElementNS("http://www.w3.org/2000/svg", 'line');
+        top_ci_arrow_sec0.id = "top-ci-arrow";
+        top_ci_arrow_sec0.classList.add("ci");
+        top_ci_arrow_sec0.setAttribute('x1', linearScale(min_in_ci, domain, range));
+        top_ci_arrow_sec0.setAttribute('x2', linearScale(max_in_ci, domain, range));
+        top_ci_arrow_sec0.setAttribute('y1', areas['sec0display'].bottom - (areas['sec0display'].bottom - areas['sec0display'].top)/2);
+        top_ci_arrow_sec0.setAttribute('y2', areas['sec0display'].bottom - (areas['sec0display'].bottom - areas['sec0display'].top)/2);
+        top_ci_arrow_sec0.style.display = 'none';
+        ci_container.insertAdjacentElement('beforeend', top_ci_arrow_sec0);
+
+        const pop_ci_arrow = document.createElementNS("http://www.w3.org/2000/svg", 'line');
+        pop_ci_arrow.id = "pop-ci-arrow";
+        pop_ci_arrow.classList.add("ci");
+        pop_ci_arrow.setAttribute('x1', linearScale(pop_stat, domain, range));
+        pop_ci_arrow.setAttribute('x2', linearScale(pop_stat, domain, range));
+        pop_ci_arrow.setAttribute('y1', bounds.bottom - (bounds.bottom - bounds.top)/2);
+        pop_ci_arrow.setAttribute('y2', bounds.bottom);
+        pop_ci_arrow.style.display = 'none';
+        ci_container.insertAdjacentElement('beforeend', pop_ci_arrow);
+        const pop_ci_text = document.createElementNS("http://www.w3.org/2000/svg", 'text');
+        pop_ci_text.id = "pop-ci-text";
+        pop_ci_text.classList.add("ci");
+        pop_ci_text.setAttribute('x', linearScale(pop_stat, domain, range) - 1);
+        pop_ci_text.setAttribute('y', bounds.bottom);
+        pop_ci_text.style.alignmentBaseline = 'ideographic';
+        pop_ci_text.style.textAnchor = 'end';
+        pop_ci_text.style.display = 'none';
+        pop_ci_text.textContent = Math.round(pop_stat * 100) / 100 ;
+        ci_container.insertAdjacentElement('beforeend', pop_ci_text);
+        const arrow_y = bounds.bottom - ((bounds.bottom - bounds.top)/8) * 3;
+        const arrow_group = makeSVGArrow(linearScale(0, domain, range), linearScale(pop_stat, domain, range), arrow_y, arrow_y);
+        for(a of arrow_group.childNodes){
+            a.style.display = 'none';
+            a.classList.add("ci");
+        }
+        ci_container.insertAdjacentElement('beforeEnd', arrow_group);
+
+        const tail_ci_text = document.createElementNS("http://www.w3.org/2000/svg", 'text');
+        tail_ci_text.id = "tail-ci-text";
+        tail_ci_text.classList.add("ci");
+        tail_ci_text.setAttribute('x', linearScale(pop_stat, domain, range) - 1);
+        tail_ci_text.setAttribute('y', bounds.top + (bounds.bottom - bounds.top) / 8);
+        tail_ci_text.style.alignmentBaseline = 'ideographic';
+        tail_ci_text.style.textAnchor = 'end';
+        tail_ci_text.style.display = 'none';
+        tail_ci_text.textContent = `Tail Proportion \n = ${tail_count} / ${tail_total} = ${Math.round(tail_count / tail_total * 100) / 100} `;
+        ci_container.insertAdjacentElement('beforeend', tail_ci_text);
+        
     }else{
-        let num_elements = 1000;
+        let num_elements = 50;
         let y_space = factor_bounds.bottom - factor_bounds.top;
         let y_space_per_element = Math.min(y_space / num_elements, bounds.radius);
+        let tail_total = distribution.length;
+        let tail_count = 0;
+        let min_in_ci = null;
+        let max_in_ci = null;
         for(let d = 0; d < distribution.length; d++){
             let [ci_left, ci_center, ci_right] = distribution[d];
             let in_ci = get_in_ci(distribution[d]);
+            if(in_ci) {
+                tail_count++;
+                if(min_in_ci == null || distribution[d][0] < min_in_ci) min_in_ci = distribution[d][0];
+                if(max_in_ci == null || distribution[d][1] > max_in_ci) max_in_ci = distribution[d][1];
+            }
             let distrubution_group = document.createElementNS("http://www.w3.org/2000/svg", 'g');
             distrubution_group.id = `distribution-${d}`;
             distribution_container.insertAdjacentElement('beforeend', distrubution_group);
-
+            
             let bottom = factor_bounds.bottom - (y_space_per_element * d)
             let top = factor_bounds.bottom - (y_space_per_element * (d + 1));
             let center = top + (bottom - top);
@@ -404,13 +533,27 @@ function createDistribution(distribution, options, areas, bounds, domain, range,
             distribution_element.setAttribute('x2', linearScale(ci_right, domain, range));
             distribution_element.setAttribute('y2', center);
             distribution_element.setAttribute('data-stat', ci_center);
+            distribution_element.setAttribute('data-inci', in_ci);
             distribution_element.setAttribute('shape-rendering', 'crispEdges');
-            distribution_element.style.stroke = in_ci ? 'green' : "black";
+            distribution_element.style.stroke = in_ci ? 'green' : "red";
             distribution_element.style.display = 'none';
             distrubution_group.insertAdjacentElement('beforeend', distribution_element);
-        }
-    }
 
+        }
+        let ci_container = document.createElementNS("http://www.w3.org/2000/svg", 'g');
+        distribution_container.insertAdjacentElement('beforeend', ci_container);
+        const cover_ci_text = document.createElementNS("http://www.w3.org/2000/svg", 'text');
+        cover_ci_text.id = "cover-ci-text";
+        // cover_ci_text.classList.add("ci");
+        cover_ci_text.setAttribute('x', linearScale(domain[0], domain, range) - 1);
+        cover_ci_text.setAttribute('y', bounds.top + (bounds.bottom - bounds.top) / 8);
+        cover_ci_text.style.alignmentBaseline = 'ideographic';
+        cover_ci_text.style.textAnchor = 'start';
+        // cover_ci_text.style.display = 'none';
+        cover_ci_text.textContent = `CI Coverage \n = ${tail_count} / ${tail_total} = ${Math.round(tail_count / tail_total * 100) / 100} `;
+        distribution_container.insertAdjacentElement('beforeend', cover_ci_text);
+    }
+    
 }
 function createAxis(scale, bounds, dimensions, svg_name, container_svg, is_population){
     let label_group = container_svg.querySelector(`#${svg_name}`);

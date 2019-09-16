@@ -35,7 +35,7 @@ const vis = {
         createStaticLabels(dimensions, this.areas[`${area}display`], svg, is_population);
         createElementsFromDataset(dataset, this.options, this.areas[`${area}display`], ds_domain, ds_range, dimensions, name, svg, is_population);
         createStatMarkersFromDataset(dataset, this.options, this.areas, this.areas[`${area}display`], ds_domain, ds_range, dimensions, `${name}_stats`, svg, is_population);
-        createAnalysisMarkersFromDataset(dataset, this.options, this.areas, this.areas[`${area}display`], ds_domain, ds_range, dimensions, `${name}_analysis`, svg, is_population);
+        createAnalysisMarkersFromDataset(dataset, this.options, this.areas, this.areas[`${area}display`], ds_domain, ds_range, dimensions, `${name}_analysis`, svg, is_population, this.population_dimensions == this.sample_dimensions);
         let scale = d3.scaleLinear().domain(ds_domain).nice();
         scale.range(ds_range)
         createAxis(scale, this.areas[`${area}axis`], dimensions, `${name}_axis`, svg, is_population)
@@ -64,8 +64,10 @@ const vis = {
         
         // this.drawDynamic();
     },
-    initSample: function(sample_id, dist){
+    initSample: function(sample_id){
+        console.log(sample_id);
         clearSvg('dynamicSVG');
+        this.hideCI();
         let sample_ghost_container = document.querySelector(`#sample-${sample_id}-ghosts`);
         let sample_ghosts = sample_ghost_container.querySelectorAll('*');
         for(ghost of sample_ghosts){
@@ -78,6 +80,13 @@ const vis = {
         }
         this.initDataset(this.samples[sample_id], this.sample_dimensions, '#dynamicSVG', 'sec1', `sample_${sample_id}`, false, this.population_domain, this.population_range); 
         dd_updateDatapoints(this.samples[sample_id], this.population_dimensions, this.sample_dimensions);
+        let ci_coverage = document.querySelector('#cover-ci-text');
+        if(ci_coverage){
+            let distribution = [...document.querySelectorAll('.distribution')].filter((e, i) => i <= sample_id);
+            let distribution_in_ci = distribution.filter((e) => e.dataset.inci == "true");
+            let coverage_up_to_sample = distribution_in_ci.length / distribution.length
+            ci_coverage.textContent = `CI Coverage \n = ${distribution_in_ci.length} / ${distribution.length} = ${Math.round(coverage_up_to_sample * 100) / 100}`; 
+        }
     },
     initPreview: function(dataset){
 
@@ -93,7 +102,8 @@ const vis = {
     initDistribution: function(distribution, dimensions, container_svg, area, domain, range){
 
         let distribution_stats = getDistributionStats(distribution);
-        let get_in_ci = (dp) => {return this.module.inCI(distribution_stats, this.population_dataset.statistics, this.population_dataset.statistics.overall.analysis[this.options.Statistic][this.options.popAnalysis], dp)};
+        let pop_stat = this.population_dataset.statistics.overall.analysis[this.options.Statistic][this.options.popAnalysis];
+        let get_in_ci = (dp) => {return this.module.inCI(distribution_stats, this.population_dataset.statistics, pop_stat, dp)};
         let ds_domain = domain;
         const ds_range = range;
         if(this.options.Analysis == "Difference"){
@@ -107,97 +117,57 @@ const vis = {
         let scale = d3.scaleLinear().domain(ds_domain).nice();
         scale.range(ds_range)
         const svg = document.querySelector(container_svg); 
-        let sample_elements = createDistribution(distribution, this.options, this.areas, this.areas[`${area}display`], ds_domain, ds_range, dimensions, `distribution-container`, svg, false, get_in_ci);
+        let sample_elements = createDistribution(distribution, this.options, this.areas, this.areas[`${area}display`], ds_domain, ds_range, dimensions, `distribution-container`, svg, false, get_in_ci, pop_stat);
         createAxis(scale, this.areas[`${area}axis`], dimensions, `${name}_axis`, svg, false)
-        // let statistic = this.options.Statistic;
-        // let min = 0;
-        // let max = 1;
-        // if(statistic == "Slope"){
-        //     max = distribution.reduce((a, c)=> c.point_value > a ? c.point_value : a, -100000);
-        //     min = distribution.reduce((a, c)=> c.point_value < a ? c.point_value : a, 100000);
-        //     min =Math.min(min, 0);
-        //     max = Math.max(0, max);
-        // }else if(this.sample_dimensions.length < 2 && statistic == 'proportion'){
-        //     max = 1;
-        //     min = 0; 
-        // }else if(this.sample_dimensions.length > 1 && this.sample_dimensions[1].factors.length == 2){
-        //     max = 0 + (this.popMax - this.popMin)/2;
-        //     min = 0 - (this.popMax - this.popMin)/2; 
-        // }else if(this.sample_dimensions.length > 1 && this.sample_dimensions[1].factors.length > 2){
-        //     max = 0 + (this.popMax - this.popMin);
-        //     min = 0; 
-        // }else {
-        //     max = this.popMax;
-        //     min = this.popMin; 
-        // }
-        
-        // let area_heap = this.areas["sec2display"];
-        // let area_stat = this.areas["sec1display"];
-        // let area_axis = this.areas["sec2axis"];
-        // let vertical = false;
-        // if(this.sample_dimensions.length == 2 && this.sample_dimensions[0].type == 'numeric' && this.sample_dimensions[1].type == 'numeric'){
-        //     area_heap = this.areas["sec2regRdisplay"];
-        //     area_stat = this.areas["sec2regLdisplay"];
-        //     area_axis = this.areas["sec2regRaxis"];
-        //     vertical = true;
-        // }
-        // let [datapoints, stats, ci, extra] = elementsFromDistribution(
-        //         distribution,
-        //         this.samples,
-        //         this.sample_dimensions,
-        //         area_stat, this.options,
-        //         this.popMin,
-        //         this.popMax,
-        //         min,
-        //         max,
-        //         this.module.inCI,
-        //         getPopulationStatistic(this.dataset, statistic, this.dimensions),
-        //         this.dataset.largeCI
-        //     );
-        // placeDistribution(datapoints, ci, area_heap, vertical, min, max, this.staticElements.stat_markers, this.dataset.largeCI);
-        // this.dynamicElements.distribution = {};
-        // this.dynamicElements.distribution.datapoints = datapoints;
-        // let prev_all = this.dynamicElements.all || [];
-        // //this.dynamicElements.all = prev_all.concat(datapoints);
-        // this.dynamicElements.distribution.stats = stats;
-        // this.dynamicElements.distribution.ci = ci;
-        
-
-        // let axis = axisFromDataset(area_axis, min, max, vertical);
-        // this.staticElements.dist_axis = axis;
-        // this.staticElements.all = this.staticElements.all.concat(axis);
-
-        // if(extra) this.staticElements.ontop = this.staticElements.ontop.concat(extra);
-
-        // this.drawDynamic();
     },
 
-    initSampleDistElements(datapoints){
-        this.dynamicElements.all = [].concat(datapoints.all);
-        this.dynamicElements.ghosts = [];
-        this.dynamicElements.new_ghosts = [];
-        this.dynamicElements.stat_markers = [];
-        for(let i = 0; i < this.dynamicElements.distribution.stats.length && i < this.current_sample; i++){
-            //this.dynamicElements.all = this.dynamicElements.all.concat(this.dynamicElements.distribution.stats[i]);
-            this.dynamicElements.ghosts = this.dynamicElements.ghosts.concat(this.dynamicElements.distribution.stats[i]);
-            this.dynamicElements.all = this.dynamicElements.all.concat(this.dynamicElements.distribution.stats[i]);
-            this.dynamicElements.all = this.dynamicElements.all.concat([this.dynamicElements.distribution.datapoints[i]]);
+    hideGhosts: function(){
+        let ghosts = document.querySelectorAll('.sample-ghost,.distribution');
+        for(g of ghosts){
+            g.style.display = 'none';
         }
-        this.dynamicElements.new_ghosts.push(this.dynamicElements.distribution.stats[this.current_sample]);
-        this.dynamicElements.all.push(this.dynamicElements.distribution.datapoints[this.current_sample]);
     },
+    hideCI: function(){
+        let ci = document.querySelectorAll('.ci');
+        for(g of ci){
+            g.style.display = 'none';
+        }
+    },
+    showCI: function(){
+        let ci = document.querySelectorAll('.ci');
+        for(g of ci){
+            g.style.display = null;
+        }
+    },
+
+
+
     initAnimation: function(reps, include_distribution, track, inherit_speed = false){
-        this.initSample(this.current_sample, true);
-        this.current_sample++;
-        if (reps > 0){
-            setTimeout(this.initAnimation.bind(this, reps - 1, include_distribution, track, inherit_speed), 100);
+        this.pause();
+        this.reps_left = reps - 1;
+        let speed = inherit_speed ? this.speed : (1 + 0.75*(reps - 1)) * (1 + 1 * include_distribution);
+        this.speed = speed;
+        this.include_distribution = include_distribution;
+
+        if(this.current_sample >= this.samples.length){
+            this.current_sample = 0;
+            this.hideGhosts();
         }
-        // this.pause();
-        // this.reps_left = reps - 1;
-        // // let speed = this.speed || 1 + 0.75*(reps - 1);
-        // let speed = inherit_speed ? this.speed : (1 + 0.75*(reps - 1)) * (1 + 1 * include_distribution);
-        // this.speed = speed;
-        // this.include_distribution = include_distribution;
+
+        let self = this;
+        let animation = {
+            total_duration: 10000 / speed,
+            start: function(){
+                self.initSample(self.current_sample);
+                self.current_sample++;
+                // self.current_sample = (self.current_sample + 1)%(self.samples.length);
+            },
+            percentUpdate: function(p){
+                return p >= 1;
+            }
+        }
+        this.animation = animation;
+        this.animation.start();
         // let animation = new Animation(`${reps}:${include_distribution}`);
         // if(reps < 900){
         //     if(this.current_sample >= 1000){
@@ -228,175 +198,83 @@ const vis = {
         // }
         // this.last_animation_type = "normal";
         // [this.current_stage, this.current_animation_percent]  = this.animation.progress_time(window.performance.now());
+        this.current_animation_percent = 0;
+        this.paused = false;
+        ac_unpause();
+        this.last_frame = window.performance.now();
+        if(!this.loop_started) {
+            this.loop(window.performance.now(), true);
+            this.loop_started = true;
+        }
+
+    },
+    initCIAnimation(large){
+        this.showCI();
+        // this.reps_left = 0;
+        // let speed = 1;
+        // this.include_distribution = false;
+        // let animation = new Animation(`ci`);
+        // ma_createCIAnimation(animation, this.population_dimensions, this.sample_dimensions, this.staticElements, this.dynamicElements, this.module, speed, this.current_sample, this.areas, large);
+        // this.animation = animation;
+        // this.animation.start();
+        
+        // [this.current_stage, this.current_animation_percent]  = this.animation.progress_time(window.performance.now());
+        // if(this.last_animation_type == "ci"){
+        //     this.setProgress(1);
+        // }
+        // this.last_animation_type = "ci";
         // this.paused = false;
         // ac_unpause();
         // this.last_frame = window.performance.now();
         // if(!this.loop_started) {
-        //     this.loop(window.performance.now(), true);
+        //     this.loop(window.performance.now());
         //     this.loop_started = true;
         // }
-
-    },
-    initCIAnimation(large){
-        this.reps_left = 0;
-        let speed = 1;
-        this.include_distribution = false;
-        let animation = new Animation(`ci`);
-        ma_createCIAnimation(animation, this.population_dimensions, this.sample_dimensions, this.staticElements, this.dynamicElements, this.module, speed, this.current_sample, this.areas, large);
-        this.animation = animation;
-        this.animation.start();
-        
-        [this.current_stage, this.current_animation_percent]  = this.animation.progress_time(window.performance.now());
-        if(this.last_animation_type == "ci"){
-            this.setProgress(1);
-        }
-        this.last_animation_type = "ci";
-        this.paused = false;
-        ac_unpause();
-        this.last_frame = window.performance.now();
-        if(!this.loop_started) {
-            this.loop(window.performance.now());
-            this.loop_started = true;
-        }
     },
     initRandTestCIAnimation(large){
-        this.reps_left = 0;
-        let speed = 1;
-        this.include_distribution = false;
-        let animation = new Animation(`ci`);
-        ma_createRandTestCIAnimation(animation, this.population_dimensions, this.sample_dimensions, this.staticElements, this.dynamicElements, this.module, speed, this.current_sample, this.areas, large);
-        this.animation = animation;
-        this.animation.start();
-        [this.current_stage, this.current_animation_percent]  = this.animation.progress_time(window.performance.now());
-        if(this.last_animation_type == "randci"){
-            this.setProgress(1);
-        }
-        this.last_animation_type = "randci";
-        this.paused = false;
-        ac_unpause();
-        this.last_frame = window.performance.now();
-        if(!this.loop_started) {
-            this.loop(window.performance.now());
-            this.loop_started = true;
-        }
+        this.showCI();
+        // this.reps_left = 0;
+        // let speed = 1;
+        // this.include_distribution = false;
+        // let animation = new Animation(`ci`);
+        // ma_createRandTestCIAnimation(animation, this.population_dimensions, this.sample_dimensions, this.staticElements, this.dynamicElements, this.module, speed, this.current_sample, this.areas, large);
+        // this.animation = animation;
+        // this.animation.start();
+        // [this.current_stage, this.current_animation_percent]  = this.animation.progress_time(window.performance.now());
+        // if(this.last_animation_type == "randci"){
+        //     this.setProgress(1);
+        // }
+        // this.last_animation_type = "randci";
+        // this.paused = false;
+        // ac_unpause();
+        // this.last_frame = window.performance.now();
+        // if(!this.loop_started) {
+        //     this.loop(window.performance.now());
+        //     this.loop_started = true;
+        // }
     },
-    initInterpolators: function(interpolators){
-        this.interpolators = interpolators;
-    },
-    initStageInitials: function(initials){
-        for(let i = 0; i < initials.length; i++){
-            let initial = initials[i];
-            let element = initial.el;
-            let attr = initial.attr;
-            let value = initial.value;
-            element.setAttr(attr, value);
-        }
-    },
-    updateStatic: function(stage_percentage){
-        if(!this.animation.playing) return;
-        for(let i = 0; i < this.interpolators.length; i++){
-            let interpolator = this.interpolators[i];
-            let element = interpolator.el;
 
-            let attr = interpolator.attr;
-            let value = interpolator.value(stage_percentage);
-            element.setAttr(attr, value);
-        }
-    },
-    updateDynamic: function(stage_percentage){
-        if(!this.animation.playing) return;
-        for(let i = 0; i < this.interpolators.length; i++){
-            let interpolator = this.interpolators[i];
-            let element = interpolator.el;
-            let attr = interpolator.attr;
-            let value = interpolator.value(stage_percentage);
-            element.setAttr(attr, value);
-        }
-    },
-    drawStatic: function(){
-        let ctx = this.ctx;
-        clearCtx(ctx);
-        for(let i = 0; i < this.staticElements.all.length; i++){
-            let element = this.staticElements.all[i];
-
-            if(config.element_draw_type[element.type] == "canvas"){
-                element.draw(ctx);
-            }else if(config.element_draw_type[element.type] == "svg"){
-                if(!element.svg_initialised || d3.select('#' + element.svg_id).empty()){
-                    let svg_id = '#popSvgContainer';
-                    defaultSVGFuncs[element.type](element, svg_id);
-                    element.svg_initialised = true;
-                }
-                element.svgUpdate();
-            }
-            
-        }
-    },
-    drawStaticOnTop: function(){
-        let ctx = this.staticOnTopCtx;
-        clearCtx(ctx);
-        for(let i = 0; i < this.staticElements.ontop.length; i++){
-            let element = this.staticElements.ontop[i];
-
-            if(config.element_draw_type[element.type] == "canvas"){
-                element.draw(ctx);
-            }else if(config.element_draw_type[element.type] == "svg"){
-                if(!element.svg_initialised || d3.select('#' + element.svg_id).empty()){
-                    let svg_id = '#popSvgContainer';
-                    defaultSVGFuncs[element.type](element, svg_id);
-                    element.svg_initialised = true;
-                }
-                element.svgUpdate();
-            }
-            
-        }
-    },
     testSections: function(){
         for(let i in this.areas){
             this.ctx.fillStyle = "rgb("+Math.floor(Math.random()*255)+","+Math.floor(Math.random()*255)+","+Math.floor(Math.random()*255)+")";
             this.ctx.fillRect(parseInt(this.areas[i].left), this.areas[i].top, this.areas[i].width, this.areas[i].height); 
         }
     },
-    drawDynamic: function(){
-        let ctx = this.dynamicCtx;
-        clearCtx(ctx);
-        if(!this.dynamicElements.all) return;
-        for(let i = 0; i < this.dynamicElements.all.length; i++){
-            let element = this.dynamicElements.all[i];
-            if(config.element_draw_type[element.type] == "canvas"){
-                element.draw(ctx);
-            }else if(config.element_draw_type[element.type] == "svg"){
-                if(!element.svg_initialised || d3.select('#' + element.svg_id).empty()){
-                    let svg_id = '#dynSvgContainer';
-                    defaultSVGFuncs[element.type](element, svg_id);
-                    element.svg_initialised = true;
-                }
-                element.svgUpdate();
-            }
-        }
-    },
+
     loop: function(ts, new_loop = false){
-        //let start_t = window.performance.now();
-        //if(!this.loop_started) return;
         this.last_frame = this.last_frame || ts;
         if(new_loop) this.last_frame = ts;
         let stage_not_done = true;
         if(!this.paused){
             this.current_animation_percent += (ts-this.last_frame) / this.animation.total_duration;
+            console.log(this.current_animation_percent);
             stage_not_done = this.setProgress(this.current_animation_percent);
+            
         }
         
         //this.drawStatic();
-        if(stage_not_done){
-            this.drawDynamic();
-            if(this.static_draw_index == 0){
-                this.drawStatic();
-            }
-            this.drawStaticOnTop();
-            this.static_draw_index += 1;
-            this.static_draw_index %= 3;
-            this.last_frame = ts;
-            //console.log(window.performance.now() - start_t);
+        if(!stage_not_done){
+           this.animationDone();
         }
 
         if(!this.paused){
@@ -406,16 +284,11 @@ const vis = {
     },
     animationDone: function(){
         if(this.reps_left > 0) {
-            
             this.initAnimation(this.reps_left, this.include_distribution, false, true);
         }else{
             this.speed = null;
             controller.pause();
             controller.animationDone();
-            this.updateDynamic(1);
-            this.drawDynamic();
-            this.drawStatic();
-            this.drawStaticOnTop();
         }
         
     },
@@ -423,22 +296,9 @@ const vis = {
     setProgress: function(p){
         
         this.current_animation_percent = p;
-        // this.animation.percentUpdate(this.current_animation_percent);
-        let [stage, stage_percentage] = this.animation.percentUpdate(this.current_animation_percent);
-        if(stage != this.current_stage){
-            this.animation.startStage(stage);
-            this.current_stage = stage;
-        }
-        
-        this.updateDynamic(stage_percentage);
+        let stage_percentage = this.animation.percentUpdate(this.current_animation_percent);
         
         controller.setPlaybackProgress(p);
-
-        if(this.paused && stage_percentage != 1){
-            this.drawDynamic();
-            this.drawStatic();
-            this.drawStaticOnTop();
-        }
 
         return stage_percentage != 1;
         
@@ -455,7 +315,7 @@ const vis = {
         this.paused = false;
         
         cancelAnimationFrame(this.reqAnimationFrame); 
-        this.loop(window.performance.now());
+        this.loop(window.performance.now(), true);
         this.loop_started = true;
         
     },
