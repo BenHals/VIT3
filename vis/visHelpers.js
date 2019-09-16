@@ -544,14 +544,14 @@ function createDistribution(distribution, options, areas, bounds, domain, range,
         distribution_container.insertAdjacentElement('beforeend', ci_container);
         const cover_ci_text = document.createElementNS("http://www.w3.org/2000/svg", 'text');
         cover_ci_text.id = "cover-ci-text";
-        cover_ci_text.classList.add("ci");
+        // cover_ci_text.classList.add("ci");
         cover_ci_text.setAttribute('x', linearScale(domain[0], domain, range) - 1);
         cover_ci_text.setAttribute('y', bounds.top + (bounds.bottom - bounds.top) / 8);
         cover_ci_text.style.alignmentBaseline = 'ideographic';
         cover_ci_text.style.textAnchor = 'start';
-        cover_ci_text.style.display = 'none';
+        // cover_ci_text.style.display = 'none';
         cover_ci_text.textContent = `CI Coverage \n = ${tail_count} / ${tail_total} = ${Math.round(tail_count / tail_total * 100) / 100} `;
-        ci_container.insertAdjacentElement('beforeend', cover_ci_text);
+        distribution_container.insertAdjacentElement('beforeend', cover_ci_text);
     }
     
 }

@@ -232,25 +232,26 @@ const vis = {
         // }
     },
     initRandTestCIAnimation(large){
-        this.reps_left = 0;
-        let speed = 1;
-        this.include_distribution = false;
-        let animation = new Animation(`ci`);
-        ma_createRandTestCIAnimation(animation, this.population_dimensions, this.sample_dimensions, this.staticElements, this.dynamicElements, this.module, speed, this.current_sample, this.areas, large);
-        this.animation = animation;
-        this.animation.start();
-        [this.current_stage, this.current_animation_percent]  = this.animation.progress_time(window.performance.now());
-        if(this.last_animation_type == "randci"){
-            this.setProgress(1);
-        }
-        this.last_animation_type = "randci";
-        this.paused = false;
-        ac_unpause();
-        this.last_frame = window.performance.now();
-        if(!this.loop_started) {
-            this.loop(window.performance.now());
-            this.loop_started = true;
-        }
+        this.showCI();
+        // this.reps_left = 0;
+        // let speed = 1;
+        // this.include_distribution = false;
+        // let animation = new Animation(`ci`);
+        // ma_createRandTestCIAnimation(animation, this.population_dimensions, this.sample_dimensions, this.staticElements, this.dynamicElements, this.module, speed, this.current_sample, this.areas, large);
+        // this.animation = animation;
+        // this.animation.start();
+        // [this.current_stage, this.current_animation_percent]  = this.animation.progress_time(window.performance.now());
+        // if(this.last_animation_type == "randci"){
+        //     this.setProgress(1);
+        // }
+        // this.last_animation_type = "randci";
+        // this.paused = false;
+        // ac_unpause();
+        // this.last_frame = window.performance.now();
+        // if(!this.loop_started) {
+        //     this.loop(window.performance.now());
+        //     this.loop_started = true;
+        // }
     },
 
     testSections: function(){
