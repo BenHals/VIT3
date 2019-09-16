@@ -35,7 +35,7 @@ const vis = {
         createStaticLabels(dimensions, this.areas[`${area}display`], svg, is_population);
         createElementsFromDataset(dataset, this.options, this.areas[`${area}display`], ds_domain, ds_range, dimensions, name, svg, is_population);
         createStatMarkersFromDataset(dataset, this.options, this.areas, this.areas[`${area}display`], ds_domain, ds_range, dimensions, `${name}_stats`, svg, is_population);
-        createAnalysisMarkersFromDataset(dataset, this.options, this.areas, this.areas[`${area}display`], ds_domain, ds_range, dimensions, `${name}_analysis`, svg, is_population);
+        createAnalysisMarkersFromDataset(dataset, this.options, this.areas, this.areas[`${area}display`], ds_domain, ds_range, dimensions, `${name}_analysis`, svg, is_population, this.population_dimensions == this.sample_dimensions);
         let scale = d3.scaleLinear().domain(ds_domain).nice();
         scale.range(ds_range)
         createAxis(scale, this.areas[`${area}axis`], dimensions, `${name}_axis`, svg, is_population)
@@ -67,6 +67,7 @@ const vis = {
     initSample: function(sample_id){
         console.log(sample_id);
         clearSvg('dynamicSVG');
+        this.hideCI();
         let sample_ghost_container = document.querySelector(`#sample-${sample_id}-ghosts`);
         let sample_ghosts = sample_ghost_container.querySelectorAll('*');
         for(ghost of sample_ghosts){
@@ -124,6 +125,18 @@ const vis = {
         let ghosts = document.querySelectorAll('.sample-ghost,.distribution');
         for(g of ghosts){
             g.style.display = 'none';
+        }
+    },
+    hideCI: function(){
+        let ci = document.querySelectorAll('.ci');
+        for(g of ci){
+            g.style.display = 'none';
+        }
+    },
+    showCI: function(){
+        let ci = document.querySelectorAll('.ci');
+        for(g of ci){
+            g.style.display = null;
         }
     },
 
@@ -196,26 +209,27 @@ const vis = {
 
     },
     initCIAnimation(large){
-        this.reps_left = 0;
-        let speed = 1;
-        this.include_distribution = false;
-        let animation = new Animation(`ci`);
-        ma_createCIAnimation(animation, this.population_dimensions, this.sample_dimensions, this.staticElements, this.dynamicElements, this.module, speed, this.current_sample, this.areas, large);
-        this.animation = animation;
-        this.animation.start();
+        this.showCI();
+        // this.reps_left = 0;
+        // let speed = 1;
+        // this.include_distribution = false;
+        // let animation = new Animation(`ci`);
+        // ma_createCIAnimation(animation, this.population_dimensions, this.sample_dimensions, this.staticElements, this.dynamicElements, this.module, speed, this.current_sample, this.areas, large);
+        // this.animation = animation;
+        // this.animation.start();
         
-        [this.current_stage, this.current_animation_percent]  = this.animation.progress_time(window.performance.now());
-        if(this.last_animation_type == "ci"){
-            this.setProgress(1);
-        }
-        this.last_animation_type = "ci";
-        this.paused = false;
-        ac_unpause();
-        this.last_frame = window.performance.now();
-        if(!this.loop_started) {
-            this.loop(window.performance.now());
-            this.loop_started = true;
-        }
+        // [this.current_stage, this.current_animation_percent]  = this.animation.progress_time(window.performance.now());
+        // if(this.last_animation_type == "ci"){
+        //     this.setProgress(1);
+        // }
+        // this.last_animation_type = "ci";
+        // this.paused = false;
+        // ac_unpause();
+        // this.last_frame = window.performance.now();
+        // if(!this.loop_started) {
+        //     this.loop(window.performance.now());
+        //     this.loop_started = true;
+        // }
     },
     initRandTestCIAnimation(large){
         this.reps_left = 0;

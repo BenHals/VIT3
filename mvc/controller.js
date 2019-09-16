@@ -273,8 +273,6 @@ const controller = {
         }else if(type == 'randTestCI'){
             vis.initRandTestCIAnimation(large);
         }
-        
-        controller.unpause();
     },
     pause: function(){
         this.paused = true;
