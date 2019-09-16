@@ -120,7 +120,7 @@ function oc_refresh_option(name, option, value){
     if(index == 0){
         document.querySelector(`#options`).insertAdjacentHTML('afterbegin', genOption(name, option, value));
     }else{
-        document.querySelector(`#options>div:eq(${index-1})`).insertAdjacentHTML('afterend', genOption(name, option, value));
+        document.querySelectorAll(`#options div`)[index - 1].insertAdjacentHTML('afterend', genOption(name, option, value));
     }
     
 
