@@ -295,7 +295,7 @@ config.modules =  {
         name: "Randomisation Variation",
         baseHTML: generateModuleHTML,
         baseControls: generateFileControls,
-        allowedVariables:[['n', null]],
+        allowedVariables:[['n', null], ['c', null]],
         sampleSize:config.sampleSizeOptions['popSize'],
         sampleGroups:config.randVarGroups.slice(0, 2),
         generateOptions: function(dimensions, num){
