@@ -256,7 +256,6 @@ const controller = {
     visAnimUserInput: function(new_progress){
         console.log(new_progress);
         if(vis.animation){
-            console.log(vis.animation.progress_percent(new_progress));
             vis.setProgress(new_progress);
         } 
     },
