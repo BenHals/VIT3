@@ -1,5 +1,6 @@
 // From stack overflow :)
 function updateURLParameter(url, param, paramVal){
+    url = decodeURI(url);
     var newAdditionalURL = "";
     var tempArray = url.split("?");
     var baseURL = tempArray[0];
@@ -20,6 +21,7 @@ function updateURLParameter(url, param, paramVal){
 }
 
 function deleteURLParameter(url, params){
+    url = decodeURI(url);
     var newAdditionalURL = "";
     var tempArray = url.split("?");
     var baseURL = tempArray[0];
@@ -28,7 +30,7 @@ function deleteURLParameter(url, params){
     if (additionalURL) {
         tempArray = additionalURL.split("&");
         for (var i=0; i<tempArray.length; i++){
-            if($.inArray(tempArray[i].split('=')[0], params) == -1){
+            if(!params.includes(tempArray[i].split('=')[0])){
                 newAdditionalURL += temp + tempArray[i];
                 temp = "&";
             }
@@ -39,6 +41,7 @@ function deleteURLParameter(url, params){
 
 
 function getURLParameter(url, param){
+    url = decodeURI(url);
     var paramValue = null;
     var tempArray = url.split("?");
     var baseURL = tempArray[0];
