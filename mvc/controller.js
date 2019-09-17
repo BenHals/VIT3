@@ -201,7 +201,7 @@ const controller = {
         view.loadDataDisplay(ds);
         view.loadCanvas();
         fc_showContinue();
-        const vis_area = document.querySelector('#visualisation');
+        const vis_area = document.querySelector('#canvasWrapper');
         vis.init(vis_area.clientWidth, vis_area.clientHeight);
         vis.initModule(model.selected_module, model.getVisOptions());
         vis.initDimensions(model.dimensions, model.getSampleDimensions());
