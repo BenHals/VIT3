@@ -1,7 +1,7 @@
 let range_last_event = 0;
 let range_timout_event = null;
 function generatevisualisationViewHTML(module){
-  if (window.width < 768) {
+  if (document.querySelector('body').clientWidth < 768) {
     // do something for small screens
     return `
     <div id="visualisationView">
@@ -20,12 +20,15 @@ function generatevisualisationViewHTML(module){
           </button>
           <button type="button" class="btn btn-default" aria-label="Back" onclick="distSequence(1, false)">
             <span class="glyphicon glyphicon-step-forward" aria-hidden="true"></span>
+            1
           </button>
           <button type="button" class="btn btn-default" aria-label="Back" onclick="distSequence(5, false)">
             <span class="glyphicon glyphicon-forward" aria-hidden="true"></span>
+            5
           </button>
           <button type="button" class="btn btn-default" aria-label="Back" onclick="distSequence(20, false)">
             <span class="glyphicon glyphicon-forward" aria-hidden="true"></span>
+            20
           </button>
           <button type="button" class="btn btn-default" aria-label="Back" onclick="distSequence(1, true)">
             <span class="glyphicon glyphicon-step-forward" aria-hidden="true"></span>
@@ -124,7 +127,7 @@ function generatevisualisationViewHTML(module){
 }
 
 function generateAniControlsHTML_old(module_name, labels){
-  if (window.width < 768) {
+  if (document.querySelector('body').clientWidth < 768) {
     // do something for small screens
     return `
     <div id="visualisationView">
@@ -143,27 +146,34 @@ function generateAniControlsHTML_old(module_name, labels){
           </button>
           <button type="button" class="btn btn-default" aria-label="Back" onclick="ac_playAnimation(1, false)">
             <span class="glyphicon glyphicon-step-forward" aria-hidden="true"></span>
+            1
           </button>
           <button type="button" class="btn btn-default" aria-label="Back" onclick="ac_playAnimation(5, false)">
-            <span class="glyphicon glyphicon-forward" aria-hidden="true"></span>
+            <span class="glyphicon glyphicon-step-forward" aria-hidden="true"></span>
+            5
           </button>
           <button type="button" class="btn btn-default" aria-label="Back" onclick="ac_playAnimation(20, false)">
-            <span class="glyphicon glyphicon-forward" aria-hidden="true"></span>
+            <span class="glyphicon glyphicon-step-forward" aria-hidden="true"></span>
+            20
           </button>
           <button type="button" class="btn btn-default" aria-label="Back" onclick="ac_playAnimation(1, true)">
-            <span class="glyphicon glyphicon-step-forward" aria-hidden="true"></span>
+            <span class="glyphicon glyphicon-stats" aria-hidden="true"></span>
+            1
           </button>
           <button type="button" class="btn btn-default" aria-label="Back" onclick="ac_playAnimation(5, true)">
-            <span class="glyphicon glyphicon-forward" aria-hidden="true"></span>
+            <span class="glyphicon glyphicon-stats" aria-hidden="true"></span>
+            5
           </button>
           <button type="button" class="btn btn-default" aria-label="Back" onclick="ac_playAnimation(20, true)">
-            <span class="glyphicon glyphicon-forward" aria-hidden="true"></span>
+            <span class="glyphicon glyphicon-stats" aria-hidden="true"></span>
+            20
           </button>
           <button type="button" class="btn btn-default" aria-label="Back" onclick="ac_playAnimation(900, true)">
-            <span class="glyphicon glyphicon-flash" aria-hidden="true"></span>
+            <span class="glyphicon glyphicon-forward" aria-hidden="true"></span>
           </button>
           <button type="button" class="btn btn-default" aria-label="Back" onclick="ac_showCI()">
             <span class="glyphicon glyphicon-stats" aria-hidden="true"></span>
+            CI
           </button>
         </div>
         <input id="visAnimProgress" type="range" min="0" max="1" step="any" list="stages">
@@ -391,23 +401,31 @@ function ac_initHide(module_name){
   return function(){
     document.querySelector('#visControls').style.display = 'none';
     if(module_name != 'Bootstrapping'){
-      document.querySelector('#trackDiv').style.display = 'none';
+      let trackDiv = document.querySelector('#trackDiv');
+      if(trackDiv) trackDiv.style.display = 'none';
     }else{
-      document.querySelector('#trackDiv').style.display = null;
+      let trackDiv = document.querySelector('#trackDiv');
+      if(trackDiv) trackDiv.style.display = null;
     }
     if(module_name == "Bootstrapping"){
-      document.querySelector('#CIButton').style.display = null;
-      document.querySelector('#largeCIButton').style.display = null;
+      let ci_button = document.querySelector('#CIButton');
+      if(ci_button) ci_button.style.display = null;
+      let large_ci_button = document.querySelector('#largeCIButton');
+      if(large_ci_button) large_ci_button.style.display = null;
     }else{
-      document.querySelector('#CIButton').style.display = 'none';
-      document.querySelector('#largeCIButton').style.display = 'none';
+      let ci_button = document.querySelector('#CIButton');
+      if(ci_button) ci_button.style.display = 'none';
+      let large_ci_button = document.querySelector('#largeCIButton');
+      if(large_ci_button) large_ci_button.style.display = 'none';
     }
     if(module_name == "Randomisation Test"){
-      document.querySelector('#RandTestCIButton').style.display = null;
-      document.querySelector('#RandTestCIButton').style.display = null;
+      let randtest_button = document.querySelector('#RandTestCIButton');
+      if(randtest_button) randtest_button.style.display = null;
     }else{
-      document.querySelector('#RandTestCIButton').style.display = 'none';
-      document.querySelector('#largeRandTestCIButton').style.display = 'none';
+      let randtest_button = document.querySelector('#RandTestCIButton');
+      if(randtest_button) randtest_button.style.display = 'none';
+      let large_randtest_button = document.querySelector('#largeRandTestCIButton');
+      if(large_randtest_button) large_randtest_button.style.display = 'none';
     }
   }
 }
