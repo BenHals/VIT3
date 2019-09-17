@@ -281,15 +281,23 @@ const controller = {
         view.loadControls(generateAniControls);
     },
     updateSampleProgress: function(p){
-        ac_updateProgress(p);
-        if(model.samples.length == 1000 && model.largeSampleFinished){
-            ac_loadingDone();
-            let ds = model.populationDataset();
-            vis.initOptions(model.getVisOptions());
-            vis.initDimensions(model.dimensions, model.getSampleDimensions());
-            vis.initPopulation(ds);
-            vis.initSamples(model.samples, model.distribution);
-        }
+        requestAnimationFrame(() => {ac_updateProgress(p)});
+        // if(model.samples.length == 1000 && model.largeSampleFinished){
+            // ac_loadingDone();
+            // let ds = model.populationDataset();
+            // vis.initOptions(model.getVisOptions());
+            // vis.initDimensions(model.dimensions, model.getSampleDimensions());
+            // vis.initPopulation(ds);
+            // vis.initSamples(model.samples, model.distribution);
+        // }
+    },
+    allSamplesTaken: function(){
+        ac_loadingDone();
+        let ds = model.populationDataset();
+        vis.initOptions(model.getVisOptions());
+        vis.initDimensions(model.dimensions, model.getSampleDimensions());
+        vis.initPopulation(ds);
+        vis.initSamples(model.samples, model.distribution);
     },
     aniBack: function(){
         vis.stopAndClear();

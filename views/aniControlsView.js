@@ -1,6 +1,7 @@
 let range_last_event = 0;
 let range_timout_event = null;
 let distribution_focus = false;
+let loading_done = false;
 function generatevisualisationViewHTML(module){
   if (document.querySelector('body').clientWidth < 768) {
     // do something for small screens
@@ -344,6 +345,7 @@ function generateAniControls(module_name){
 
     // Returns the html for the controls, and functions to populate fields.
     let generator = generateAniControlsHTML_old;
+    loading_done = false;
     return [generator(module_name, labels), [ac_initHide(module_name)]];
 }
 
@@ -476,12 +478,15 @@ function ac_setPlaybackProgress(p){
 }
 
 function ac_updateProgress(p){
+  if(loading_done) return;
   document.querySelector('#takeSamplesProgress').style.display = null;
-  document.querySelector('#takeSamplesProgress').width =  `${p*100}%`;
+  document.querySelector('#takeSamplesProgress').style.width =  `${p*100}%`;
+  console.log('progress', p, document.querySelector('#takeSamplesProgress').style.width);
   document.querySelector('#visControls').style.display = 'none';
 }
 
 function ac_loadingDone(){
+  loading_done = true;
   document.querySelector('#visControls').style.display = null;
   document.querySelector('#takeSamplesProgressContainer').style.display = 'none';
 }

@@ -283,6 +283,8 @@ input[type="range"]::-webkit-slider-thumb {
   text {
     font-size: 1.5vmin;
     stroke: white;
+    stroke-width: 4px;
+    stroke-opacity: 0.8;
     paint-order: stroke fill;
   }
   line{
