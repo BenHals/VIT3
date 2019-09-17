@@ -110,6 +110,7 @@ const vis = {
         this.ds_domain = ds_domain;
         this.ds_range = ds_range;
         this.pop_stat = pop_stat;
+        this.distribution_stat = this.options.popAnalysis == this.options.Analysis ? this.pop_stat : d3.median(distribution.map(e => Array.isArray(e) ? e[1] : e));
         let scale = d3.scaleLinear().domain(ds_domain).nice();
         scale.range(ds_range)
         const svg = document.querySelector(container_svg); 
@@ -173,7 +174,7 @@ const vis = {
     to_distribution_focus: function(){
         let to_move = document.querySelectorAll('#ghostSVG g#distribution-container, #ghostSVG g#_axis');
         let range_center = this.ds_range[0] + (this.ds_range[1] - this.ds_range[0]) / 2;
-        let x_shift = range_center - linearScale(this.pop_stat, this.ds_domain, this.ds_range);
+        let x_shift = range_center - linearScale(this.distribution_stat, this.ds_domain, this.ds_range);
         for(let el of to_move){
             el.setAttribute("transform", `translate(${x_shift}, 0)`);
         }
