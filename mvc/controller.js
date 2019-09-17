@@ -79,11 +79,44 @@ const controller = {
         // Reset URL
         deleteFromUrl(['d0', 'd1', 'focus']);
         let selected_labels = [];
-        if(!use_var_dropdown){
+        if(e.target.id == 'variableSelectM'){
             selected_labels = [...Array.prototype.slice.call(e.target.selectedOptions)].map(function(option){return option.innerHTML.slice(0, option.innerHTML.length-4)});
+            let var_select_main = document.querySelector('#variablePanel > #variableSelect > option:checked').value;
+            let var_select_secondary = document.querySelector('#variablePanel > #variableSelect2 > option:checked').value;
+
+            if(selected_labels.length == 1){
+                let new_main = selected_labels[0];
+                document.querySelector('#variablePanel > #variableSelect').value = new_main;
+                document.querySelector('#variablePanel > #variableSelect2').value = "None";
+                selected_labels = [new_main];
+                // for(let child of document.querySelectorAll('#variablePanel > #variableSelect > option')){
+                //     child.setAttribute('checked', child.value == new_main);
+                // }
+                // for(let child of document.querySelectorAll('#variablePanel > #variableSelect2 > option')){
+                //     child.removeAttribute('checked');
+                // }
+            }else{
+                let new_main = var_select_main;
+                let secondary = selected_labels[0] == new_main ? selected_labels[1] : selected_labels[0]
+                selected_labels = [new_main, secondary];
+                document.querySelector('#variablePanel > #variableSelect2').value = secondary;
+                // for(let child of document.querySelectorAll('#variablePanel > #variableSelect2 > option')){
+                //     child.setAttribute('checked', selected_labels.includes(child.value) && child.vaue != new_main);
+                // }
+            }
         }else{
             let var_select_main = document.querySelector('#variablePanel > #variableSelect > option:checked').value;
             let var_select_secondary = document.querySelector('#variablePanel > #variableSelect2 > option:checked').value;
+            document.querySelector('#variablePanel > #variableSelectM').value = [var_select_main, var_select_secondary];
+            for(let child of document.querySelectorAll('#variablePanel > #variableSelectM > option')){
+                if((child.value == var_select_main) || ((var_select_secondary != "None" && var_select_secondary == child.value))){
+                    child.setAttribute('selected', 'selected');
+                    child.setAttribute('checked', 'checked');
+                }else{
+                    child.removeAttribute('selected');
+                    child.removeAttribute('checked');
+                }
+            }   
             // let var_select_main = $('#variablePanel #variableSelect').children("option:selected").val();
             // let var_select_secondary = $('#variablePanel #variableSelect2').children("option:selected").val();
             if(var_select_main == undefined | var_select_main == "None"){
