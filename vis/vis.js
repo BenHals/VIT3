@@ -68,16 +68,8 @@ const vis = {
         console.log(sample_id);
         clearSvg('dynamicSVG');
         this.hideCI();
-        let sample_ghost_container = document.querySelector(`#sample-${sample_id}-ghosts`);
-        let sample_ghosts = sample_ghost_container.querySelectorAll('*');
-        for(ghost of sample_ghosts){
-            ghost.style.removeProperty('display');
-        }
-        let distribution_container = document.querySelector(`#distribution-${sample_id}`);
-        let distributions = distribution_container.querySelectorAll('*');
-        for(dist of distributions){
-            dist.style.removeProperty('display');
-        }
+        this.showSampleGhost(sample_id);
+        this.showSampleDistribution(sample_id);
         this.initDataset(this.samples[sample_id], this.sample_dimensions, '#dynamicSVG', 'sec1', `sample_${sample_id}`, false, this.population_domain, this.population_range); 
         dd_updateDatapoints(this.samples[sample_id], this.population_dimensions, this.sample_dimensions);
         let ci_coverage = document.querySelector('#cover-ci-text');
@@ -88,6 +80,7 @@ const vis = {
             ci_coverage.textContent = `CI Coverage \n = ${distribution_in_ci.length} / ${distribution.length} = ${Math.round(coverage_up_to_sample * 100) / 100}`; 
         }
     },
+
     initPreview: function(dataset){
 
     },
@@ -120,9 +113,44 @@ const vis = {
         let sample_elements = createDistribution(distribution, this.options, this.areas, this.areas[`${area}display`], ds_domain, ds_range, dimensions, `distribution-container`, svg, false, get_in_ci, pop_stat);
         createAxis(scale, this.areas[`${area}axis`], dimensions, `${name}_axis`, svg, false)
     },
-
+    showSampleGhost: function(sample_id){
+        console.log(sample_id);
+        let sample_ghost_container = document.querySelector(`#sample-${sample_id}-ghosts`);
+        let sample_ghosts = sample_ghost_container.querySelectorAll('*');
+        for(ghost of sample_ghosts){
+            ghost.style.removeProperty('display');
+        }
+    },
+    showSampleDistribution: function(sample_id){
+        let distribution_container = document.querySelector(`#distribution-${sample_id}`);
+        let distributions = distribution_container.querySelectorAll('*');
+        for(dist of distributions){
+            dist.style.removeProperty('display');
+        }
+    },
+    hideSampleGhost: function(sample_id){
+        console.log(sample_id);
+        let sample_ghost_container = document.querySelector(`#sample-${sample_id}-ghosts`);
+        let sample_ghosts = sample_ghost_container.querySelectorAll('*');
+        for(ghost of sample_ghosts){
+            ghost.style.display = 'none';
+        }
+    },
+    hideSampleDistribution: function(sample_id){
+        let distribution_container = document.querySelector(`#distribution-${sample_id}`);
+        let distributions = distribution_container.querySelectorAll('*');
+        for(dist of distributions){
+            dist.style.display = 'none';
+        }
+    },
     hideGhosts: function(){
         let ghosts = document.querySelectorAll('.sample-ghost,.distribution');
+        for(g of ghosts){
+            g.style.display = 'none';
+        }
+    },
+    hideDistribution: function(){
+        let ghosts = document.querySelectorAll('.distribution');
         for(g of ghosts){
             g.style.display = 'none';
         }
@@ -144,30 +172,92 @@ const vis = {
 
     initAnimation: function(reps, include_distribution, track, inherit_speed = false){
         this.pause();
-        this.reps_left = reps - 1;
-        let speed = inherit_speed ? this.speed : (1 + 0.75*(reps - 1)) * (1 + 1 * include_distribution);
-        this.speed = speed;
-        this.include_distribution = include_distribution;
-
-        if(this.current_sample >= this.samples.length){
+        let self = this;
+        if(this.current_sample >= this.samples.length - 1){
             this.current_sample = 0;
             this.hideGhosts();
         }
-
-        let self = this;
-        let animation = {
-            total_duration: 10000 / speed,
-            start: function(){
-                self.initSample(self.current_sample);
-                self.current_sample++;
-                // self.current_sample = (self.current_sample + 1)%(self.samples.length);
-            },
-            percentUpdate: function(p){
-                return p >= 1;
-            }
+        if(this.module.sample_reset_index && this.current_sample % this.module.sample_reset_index == 0){
+            this.hideDistribution();
         }
-        this.animation = animation;
-        this.animation.start();
+        if(reps <= 20){
+            this.reps_left = reps - 1;
+            let speed = inherit_speed ? this.speed : (1 + 0.75*(reps - 1)) * (1 + 1 * include_distribution);
+            this.speed = speed;
+            this.include_distribution = include_distribution;
+            let animation = {
+                total_duration: 1000 / speed,
+                start: function(){
+                    self.initSample(self.current_sample);
+                    self.current_sample++;
+                    // self.current_sample = (self.current_sample + 1)%(self.samples.length);
+                },
+                percentUpdate: function(p){
+                    return p >= 1;
+                }
+            }
+            this.animation = animation;
+            this.animation.start();
+        }else{
+            this.reps_left = 0;
+            let speed = inherit_speed ? this.speed : 1 * (1 + 1 * include_distribution);
+            this.speed = speed;
+            this.include_distribution = include_distribution;
+            let num_samples_to_show = this.samples.length - this.current_sample - 2;
+            let rep_range = [this.current_sample + 2, this.current_sample + num_samples_to_show + 1, num_samples_to_show];
+
+            let animation = {
+                total_duration: 5000 / speed,
+                last_shown: self.current_sample,
+                start: function(){
+                    self.initSample(self.current_sample);
+                    self.current_sample++;
+                    this.last_shown = self.current_sample;
+                },
+                percentUpdate: function(p){
+                    if(self.module.sample_reset_index){
+                        self.hideDistribution();
+                    }
+                    let frame_sample_index = Math.min(Math.floor(rep_range[0] + (p * rep_range[2])), rep_range[1]);
+                    let num_skipped_samples = frame_sample_index - this.last_shown - 1;
+                    if (num_skipped_samples > 0){
+                        if(!self.module.sample_reset_index){
+                            let skipped_indexes = [...Array(num_skipped_samples).keys()].map(e => e + this.last_shown + 1);
+                            for(let skip_i of skipped_indexes){
+                                self.showSampleGhost(skip_i);
+                                self.showSampleDistribution(skip_i);
+                            }
+                        }else{
+                            let skipped_indexes = [...Array((frame_sample_index % self.module.sample_reset_index)).keys()].map(e => Math.max(frame_sample_index - (e + 1), 0));
+                            for(let skip_i of skipped_indexes){
+                                self.showSampleGhost(skip_i);
+                                self.showSampleDistribution(skip_i);
+                            } 
+                        }
+                    }else{
+                        if(!self.module.sample_reset_index){
+                            let backtracked_indicies = [...Array(num_skipped_samples * -1).keys()].map(e => (this.last_shown) - e);
+                            for(let back_i of backtracked_indicies){
+                                self.hideSampleGhost(back_i);
+                                self.hideSampleDistribution(back_i);
+                            }
+                        }else{
+                            let skipped_indexes = [...Array((frame_sample_index % self.module.sample_reset_index)).keys()].map(e => Math.max(frame_sample_index - (e - 1), 0));
+                            for(let skip_i of skipped_indexes){
+                                self.showSampleGhost(skip_i);
+                                self.showSampleDistribution(skip_i);
+                            } 
+                        }
+                    }
+                    self.initSample(frame_sample_index);
+                    self.current_sample = frame_sample_index;
+                    this.last_shown = self.current_sample;
+                    return p >= 1;
+                }
+            }
+            this.animation = animation;
+            this.animation.start();
+        }
         // let animation = new Animation(`${reps}:${include_distribution}`);
         // if(reps < 900){
         //     if(this.current_sample >= 1000){
@@ -201,12 +291,10 @@ const vis = {
         this.current_animation_percent = 0;
         this.paused = false;
         ac_unpause();
-        this.last_frame = window.performance.now();
         if(!this.loop_started) {
             this.loop(window.performance.now(), true);
             this.loop_started = true;
         }
-
     },
     initCIAnimation(large){
         this.showCI();
@@ -263,10 +351,11 @@ const vis = {
 
     loop: function(ts, new_loop = false){
         this.last_frame = this.last_frame || ts;
-        if(new_loop) this.last_frame = ts;
+        if(new_loop || this.last_frame > ts) this.last_frame = ts;
         let stage_not_done = true;
         if(!this.paused){
             this.current_animation_percent += (ts-this.last_frame) / this.animation.total_duration;
+            if(this.current_animation_percent < 0) console.log(this.last_frame);
             console.log(this.current_animation_percent);
             stage_not_done = this.setProgress(this.current_animation_percent);
             
@@ -278,6 +367,7 @@ const vis = {
         }
 
         if(!this.paused){
+            this.last_frame = ts;
             this.reqAnimationFrame = requestAnimationFrame(this.loop.bind(this));
         }
         

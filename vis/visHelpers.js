@@ -313,6 +313,24 @@ function createAnalysisMarkersFromDataset(dataset, options, areas, bounds, domai
         }
 
     }
+    if((is_population ? options.popAnalysis : options.Analysis) == "Confidence Interval"){
+        const factor_stat = dataset.statistics.overall.analysis[options.Statistic][is_population ? options.popAnalysis : options.Analysis];
+        const factor_stat_1_screen = linearScale(factor_stat[0], domain, range);
+        const factor_stat_2_screen = linearScale(factor_stat[2], domain, range);
+
+        const line_y = bounds.bottom - ((bounds.bottom - bounds.top)/8) * 3;
+        let ci_line = document.createElementNS("http://www.w3.org/2000/svg", 'line');
+        ci_line.id = `analysis-ci-line`;
+        ci_line.setAttribute('class', 'analysis');
+        ci_line.setAttribute('x1', factor_stat_1_screen);
+        ci_line.setAttribute('y1', line_y);
+        ci_line.setAttribute('x2', factor_stat_2_screen);
+        ci_line.setAttribute('y2', line_y);
+        ci_line.setAttribute('data-stat', `${factor_stat_1_screen} - ${factor_stat_2_screen}`);
+        ci_line.setAttribute('shape-rendering', 'crispEdges');
+        ci_line.style.stroke = "black";
+        analysis_group.insertAdjacentElement('beforeEnd', ci_line);
+    }
     
     let factor_stats = dataset.statistics.overall.point_stats;
     let stat = factor_stats[options.Statistic];
@@ -503,7 +521,7 @@ function createDistribution(distribution, options, areas, bounds, domain, range,
         ci_container.insertAdjacentElement('beforeend', tail_ci_text);
         
     }else{
-        let num_elements = 50;
+        let num_elements = 20;
         let y_space = factor_bounds.bottom - factor_bounds.top;
         let y_space_per_element = Math.min(y_space / num_elements, bounds.radius);
         let tail_total = distribution.length;
@@ -522,8 +540,8 @@ function createDistribution(distribution, options, areas, bounds, domain, range,
             distrubution_group.id = `distribution-${d}`;
             distribution_container.insertAdjacentElement('beforeend', distrubution_group);
             
-            let bottom = factor_bounds.bottom - (y_space_per_element * d)
-            let top = factor_bounds.bottom - (y_space_per_element * (d + 1));
+            let bottom = factor_bounds.bottom - (y_space_per_element * (d % model.selected_module.sample_reset_index || 10000))
+            let top = factor_bounds.bottom - (y_space_per_element * ((d % model.selected_module.sample_reset_index || 10000) + 1));
             let center = top + (bottom - top);
             let distribution_element = document.createElementNS("http://www.w3.org/2000/svg", 'line');
             distribution_element.id = `sample-id${d}`;

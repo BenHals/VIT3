@@ -1,4 +1,5 @@
-
+let range_last_event = 0;
+let range_timout_event = null;
 function generatevisualisationViewHTML(module){
   if (window.width < 768) {
     // do something for small screens
@@ -134,7 +135,7 @@ function generateAniControlsHTML_old(module_name, labels){
       </div>
       <div id="visControls">
         <div id="buttonBar">
-          <button type="button" class="btn btn-default" aria-label="Back" onclick="ac_back()">
+          <button type="button" class=class="btn btn-primary btn-block" aria-label="Back" onclick="ac_back()">
             <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
           </button>
           <button id="pausePlay" type="button" class="btn btn-default" aria-label="Back" onclick="ac_pauseToggle()">
@@ -364,6 +365,19 @@ document.addEventListener('click', function(e){
 //     $('#trackpints').prop('checked', false);
 //   }
 // })
+document.addEventListener('input', function(e){
+  if(!e.target.matches('#visAnimProgress')) return;
+  let event_time = window.performance.now();
+  // if(event_time - range_last_event < 50){
+  if(false){
+    // window.clearTimeout(range_timout_event);
+    // range_timout_event = setTimeout(controller.visAnimUserInput(parseFloat(document.querySelector('#visAnimProgress').value)), 500);
+  }else{
+    // window.clearTimeout(range_timout_event);
+    range_last_event = event_time;
+    requestAnimationFrame(() => {controller.visAnimUserInput(parseFloat(document.querySelector('#visAnimProgress').value))});
+  }
+});
 document.addEventListener('click', function(e){
   if(!e.target.matches('#visAnimProgress')) return;
   controller.visAnimUserInput(parseFloat(document.querySelector('#visAnimProgress').value));

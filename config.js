@@ -195,6 +195,7 @@ config.modules =  {
         baseHTML: generateModuleHTML,
         baseControls: generateFileControls,
         allowedVariables:[['n', null], ['c', null]],
+        sample_reset_index: 20,
         generateOptions: function(dimensions){
             if(dimensions.length < 1) return;
             this.options = [];
@@ -352,7 +353,7 @@ config.modules =  {
             var sample = [];
             for(var i = 0; i < sampleSize; i++){
                 // Pick a random element and copy it.
-                var popItem = $.extend(true, {}, population_rows.slice(i,i+1)[0]);
+                var popItem = Object.assign( {}, population_rows.slice(i,i+1)[0]);
                 // var group = Math.random();
                 // var group_index = Math.floor(group/(1/this.sampleGroups.length));
                 let group = Math.floor(Math.random() * model.getOptions()['Groups']);
@@ -424,7 +425,7 @@ config.modules =  {
             d3.shuffle(newCategories);
             for(var i = 0; i < sampleSize; i++){
                 // Pick a random element and copy it.
-                var popItem = $.extend(true, {}, population_rows.slice(i,i+1)[0]);
+                var popItem = Object.assign( {}, population_rows.slice(i,i+1)[0]);
                 
                 var group = newCategories[i];
                 popItem[model.dimensions[1].name] = categories[group];
