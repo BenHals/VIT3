@@ -3,7 +3,7 @@ const use_var_dropdown = true;
 function generateFileOptionsHTML(module){
 return `
         <div id="fileOptions">
-            <button type="button" class="bluebutton btn btn-primary" aria-label="Back" onclick="fc_gotoHome('Home')">
+            <button type="button" class="btn btn-primary btn-block" aria-label="Back" onclick="fc_gotoHome('Home')">
                 <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
                 Back to Main Menu
             </button>
@@ -31,6 +31,7 @@ return `
             <div id="variableSelectHeader" class="panel-heading">
                 <h3 class="panel-title">Variables</h3>
             </div>
+            
             <select id="variableSelect" class="panel-body selectpicker varselect" ${use_var_dropdown ? "" : "multiple='multiple'"}>
             </select>
             ${!use_var_dropdown ? "" : `<select id="variableSelect2" class="panel-body selectpicker varselect" ${use_var_dropdown ? "" : "multiple='multiple'"}>

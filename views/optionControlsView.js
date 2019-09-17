@@ -1,8 +1,9 @@
 function generateOptionControlsHTML(module){
     return `
     <div id="sampleOptions">
-      <button type="button" class="btn btn-default" aria-label="Back" onclick="oc_back()">
+      <button type="button" class="btn btn-primary btn-block" aria-label="Back" onclick="oc_back()">
         <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+        Back to File Options
       </button>
       <div id = "moduleName" class = "text-center h1">${module}</div>
       <div id="options">

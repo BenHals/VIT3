@@ -135,7 +135,7 @@ function generateAniControlsHTML_old(module_name, labels){
       </div>
       <div id="visControls">
         <div id="buttonBar">
-          <button type="button" class="btn btn-default" aria-label="Back" onclick="ac_back()">
+          <button type="button" class=class="btn btn-primary btn-block" aria-label="Back" onclick="ac_back()">
             <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
           </button>
           <button id="pausePlay" type="button" class="btn btn-default" aria-label="Back" onclick="ac_pauseToggle()">
