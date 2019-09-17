@@ -111,11 +111,15 @@ function createProportionBar(data, factor_bounds, bounds, domain, range, num_fac
         let rect_label = document.createElementNS("http://www.w3.org/2000/svg", 'text');
         rect_label.setAttribute('x', rect.left);
         rect_label.setAttribute('y', factor_bounds.top);
-        rect_label.style.alignmentBaseline = 'baseline';
+        rect_label.style.alignmentBaseline = 'hanging';
         rect_label.style.textAnchor = 'start';
         // rect_label.style.stroke = d3.hsl(config.groupColorsList[b]).brighter();
-        rect_label.style.fill = d3.hsl(config.groupColorsList[b]).brighter();
-        rect_label.style.fontSize = Math.min((rect.right - rect.left), (factor_bounds.bottom - factor_bounds.top), vmin(2));
+        // rect_label.style.fill = d3.hsl(config.groupColorsList[b]).brighter();
+        rect_label.style.fill = 'white';
+        rect_label.style.stroke = 'transparent';
+
+        // rect_label.style.stroke = d3.hsl(config.groupColorsList[b]).brighter();
+        rect_label.style.fontSize = Math.min((rect.right - rect.left), (factor_bounds.bottom - factor_bounds.top) * 1.5, vmin(6));
         rect_label.textContent = rect.label;
         rect_label.setAttribute('class', 'pop-rect-label');
         rect_label.id = `pop_id_r${b}`;
@@ -242,7 +246,7 @@ function createStatMarkersFromDataset(dataset, options, areas, bounds, domain, r
         main_stat_mark.style.stroke = "black";
         stat_group.insertAdjacentElement('beforeend', main_stat_mark);
         let main_stat_text = document.createElementNS("http://www.w3.org/2000/svg", 'text');
-        main_stat_text.setAttribute('x', screen_stat);
+        main_stat_text.setAttribute('x', screen_stat + (overall_stat > stat ? -3 : 3));
         main_stat_text.setAttribute('y', factor_bounds.bottom);
         main_stat_text.style.alignmentBaseline = 'center';
         main_stat_text.style.textAnchor = overall_stat > stat ? 'end' : 'start';
@@ -297,7 +301,7 @@ function createAnalysisMarkersFromDataset(dataset, options, areas, bounds, domai
         const factor_stat_2 = dataset.statistics.factor_2[factor_labels[factor_2_label]].point_stats[options.Statistic];
         const factor_stat_2_screen = linearScale(factor_stat_2, domain, range);
 
-        const arrow_y = bounds.bottom - ((bounds.bottom - bounds.top)/8) * 3;
+        const arrow_y = bounds.bottom - ((bounds.bottom - bounds.top)/8) * 4;
         const arrow_group = makeSVGArrow(factor_stat_1_screen, factor_stat_2_screen, arrow_y, arrow_y);
         analysis_group.insertAdjacentElement('beforeEnd', arrow_group);
     }
@@ -365,7 +369,6 @@ function createSampleGhosts(all_samples, options, areas, bounds, domain, range, 
             main_stat_mark.setAttribute('y2', factor_bounds.bottom - (factor_bounds.bottom - factor_bounds.top)/3);
             main_stat_mark.setAttribute('data-stat', stat);
             main_stat_mark.setAttribute('shape-rendering', 'crispEdges');
-            main_stat_mark.style.stroke = "black";
             main_stat_mark.style.display = 'none';
             sample_ghost_container.insertAdjacentElement('beforeend', main_stat_mark);
         }

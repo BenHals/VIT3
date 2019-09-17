@@ -66,10 +66,10 @@ const view = {
             popSVG.setAttribute('data-normHeight', vis_height);
             ghostSVG.setAttribute('data-normHeight', vis_height);
             
-            dynamicSVG.setAttribute('width', vis_width);
+            dynamicSVG.setAttribute('width', vis_width * 1.5);
             dynamicSVG.setAttribute('height', vis_height);
-            popSVG.setAttribute('width', vis_width);
-            ghostSVG.setAttribute('width', vis_width);
+            popSVG.setAttribute('width', vis_width * 1.5);
+            ghostSVG.setAttribute('width', vis_width * 1.5);
             popSVG.setAttribute('height', vis_height);
             ghostSVG.setAttribute('height', vis_height);
         }

@@ -228,13 +228,20 @@ input[type="range"]::-webkit-slider-thumb {
   }
   .playSection {
     margin-top: 5px;
+  
   }
-  .playSection button{
-    margin:5px;
+  .playSection .btn-block{
+    margin:1%;
+    width: 98%;
+    
   }
 
   .panelButton {
     padding-right: 0px !important;
+  }
+  .in-header-btn {
+    margin: 0px;
+    float: right;
   }
 
   .radioOption {
@@ -274,7 +281,9 @@ input[type="range"]::-webkit-slider-thumb {
     font-size: 2vmin;
   }
   text {
-    font-size: 1vmin;
+    font-size: 1.5vmin;
+    stroke: white;
+    paint-order: stroke fill;
   }
   line{
     stroke: black;

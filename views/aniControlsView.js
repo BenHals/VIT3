@@ -1,5 +1,6 @@
 let range_last_event = 0;
 let range_timout_event = null;
+let distribution_focus = false;
 function generatevisualisationViewHTML(module){
   if (document.querySelector('body').clientWidth < 768) {
     // do something for small screens
@@ -44,6 +45,10 @@ function generatevisualisationViewHTML(module){
           </button>
           <button type="button" class="btn btn-default" aria-label="Back" onclick="showCI()">
             <span class="glyphicon glyphicon-stats" aria-hidden="true"></span>
+          </button>
+          <button type="button" id = "centerDistButton" class="btn btn-default btn-block" aria-label="Back" onclick="ac_dist_focus()">
+            <span class="glyphicon glyphicon-resize-full" aria-hidden="true"></span>
+            Distribution Focus
           </button>
         </div>
         <input id="visAnimProgress" type="range" min="0" list="stages">
@@ -175,6 +180,10 @@ function generateAniControlsHTML_old(module_name, labels){
             <span class="glyphicon glyphicon-stats" aria-hidden="true"></span>
             CI
           </button>
+          <button type="button" id = "centerDistButton" class="btn btn-default" aria-label="Back" onclick="ac_dist_focus()">
+            <span class="glyphicon glyphicon-resize-full" aria-hidden="true"></span>
+            Distribution Focus
+          </button>
         </div>
         <input id="visAnimProgress" type="range" min="0" max="1" step="any" list="stages">
         <datalist id="stages"></datalist>
@@ -233,8 +242,8 @@ function generateAniControlsHTML_old(module_name, labels){
                 <label class ="form-check-label" for="trackpints" disabled>Animate points and track samples</label>
               </div>
             </div>
-            <div class = "row">
-              <div class="panelButton col-md-11 ">
+            <div >
+              <div class="panelButton ">
                 <button type="button" class="btn btn-primary btn-block" aria-label="Back" onclick="ac_readNumSamples('sampleOptions')">
                     Go
                 </button> 
@@ -246,7 +255,9 @@ function generateAniControlsHTML_old(module_name, labels){
         <div id="control-section-3" class ="control-section">
           <div id="buttonBar">
             <div id="distPlayButtons" class="playSection panel panel-default">
-              <div class="panel-heading text-center">${labels[1]}</div>
+              <div class="panel-heading text-center">
+                ${labels[1]} 
+              </div>
               <div class = "row">
                 <div class="col-md-8 radioOption">
                   <input id="distOptions" type="radio" name="distOptions" value="1" checked>
@@ -271,45 +282,54 @@ function generateAniControlsHTML_old(module_name, labels){
                   <label>1000</label>
                 </div>
               </div>
-              <div class = "row">
-                <div class="panelButton col-md-11 ">
+              <div>
+                <div class="panelButton">
                   <button type="button" class="btn btn-primary btn-block" aria-label="Back" onclick="ac_readNumSamples('distOptions')">
                       Go
                   </button> 
                 </div>
               </div>
-              <div class = "row" id="CIButton">
-                <div class="panelButton col-md-11 ">
+              <div id="CIButton">
+                <div class="panelButton">
                   <button type="button" class="btn btn-default btn-block" aria-label="Back" onclick="ac_showCI()">
                   <span class="glyphicon glyphicon-stats" aria-hidden="true"></span>
                   Show CI
                   </button> 
                 </div>
               </div> 
-              <div class = "row" id="largeCIButton">
-                <div class="panelButton col-md-11 ">
+              <div id="largeCIButton">
+                <div class="panelButton">
                   <button type="button" class="btn btn-default btn-block" aria-label="Back" onclick="ac_showCI(true)">
                   <span class="glyphicon glyphicon-stats" aria-hidden="true"></span>
                   Show CI for 10,000 
                   </button> 
                 </div>
               </div>
-              <div class = "row" id="RandTestCIButton">
-                <div class="panelButton col-md-11 ">
+              <div id="RandTestCIButton">
+                <div class="panelButton">
                   <button type="button" class="btn btn-default btn-block" aria-label="Back" onclick="ac_showRandTestCI()">
                   <span class="glyphicon glyphicon-stats" aria-hidden="true"></span>
                   Show Tail Proportion
                   </button> 
                 </div>
               </div>
-              <div class = "row" id="largeRandTestCIButton">
-                <div class="panelButton col-md-11 ">
+              <div id="largeRandTestCIButton">
+                <div class="panelButton">
                   <button type="button" class="btn btn-default btn-block" aria-label="Back" onclick="ac_showRandTestCI(true)">
                   <span class="glyphicon glyphicon-stats" aria-hidden="true"></span>
                   Show Tail Proportion for 10,000
                   </button> 
                 </div>
-              </div> 
+              </div>
+              <div id="centerDistContainer">
+                <div class="panelButton">
+                  <button type="button" id = "centerDistButton" class="btn btn-default btn-block" aria-label="Back" onclick="ac_dist_focus()">
+                    <span class="glyphicon glyphicon-resize-full" aria-hidden="true"></span>
+                    Distribution Focus
+                  </button>
+                </div>
+              </div>
+              
             </div>
           </div>
         </div>
@@ -428,6 +448,18 @@ function ac_initHide(module_name){
       if(large_randtest_button) large_randtest_button.style.display = 'none';
     }
   }
+}
+function ac_dist_focus(){
+  if(distribution_focus){
+    document.querySelector('#centerDistButton').innerHTML = `<span class="glyphicon glyphicon-resize-full" aria-hidden="true"></span>
+    Distribution Focus`;
+    controller.to_window_focus();
+  }else{
+    document.querySelector('#centerDistButton').innerHTML = `<span class="glyphicon glyphicon-resize-small" aria-hidden="true"></span>
+    Window Focus`;
+    controller.to_distribution_focus();
+  }
+  distribution_focus = !distribution_focus;
 }
 function ac_unpause(){
   document.querySelector('#pausePlay span').classList.remove('glyphicon-play');

@@ -107,6 +107,9 @@ const vis = {
             let domain_width = domain[1] - domain[0];
             ds_domain = [0, 0 + domain_width];
         }
+        this.ds_domain = ds_domain;
+        this.ds_range = ds_range;
+        this.pop_stat = pop_stat;
         let scale = d3.scaleLinear().domain(ds_domain).nice();
         scale.range(ds_range)
         const svg = document.querySelector(container_svg); 
@@ -167,8 +170,24 @@ const vis = {
             g.style.display = null;
         }
     },
-
-
+    to_distribution_focus: function(){
+        let to_move = document.querySelectorAll('#ghostSVG g#distribution-container, #ghostSVG g#_axis');
+        let range_center = this.ds_range[0] + (this.ds_range[1] - this.ds_range[0]) / 2;
+        let x_shift = range_center - linearScale(this.pop_stat, this.ds_domain, this.ds_range);
+        for(let el of to_move){
+            el.setAttribute("transform", `translate(${x_shift}, 0)`);
+        }
+        document.querySelector('#dynamicSVG').style.opacity = 0.1;
+        document.querySelector('#popSVG').style.opacity = 0.1;
+    },
+    to_window_focus: function(){
+        let to_move = document.querySelectorAll('#ghostSVG #distribution-container, #ghostSVG #_axis');
+        for(let el of to_move){
+            el.removeAttribute("transform");
+        }
+        document.querySelector('#dynamicSVG').style.opacity = 1;
+        document.querySelector('#popSVG').style.opacity = 1;
+    },
 
     initAnimation: function(reps, include_distribution, track, inherit_speed = false){
         this.pause();

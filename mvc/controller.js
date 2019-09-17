@@ -196,6 +196,12 @@ const controller = {
         let {scale_x, scale_y, PIXEL_RATIO} = view.resizeCanvas();
         vis.scale(scale_x, scale_y, PIXEL_RATIO);
     },
+    to_distribution_focus: function(){
+        vis.to_distribution_focus();
+    },
+    to_window_focus: function(){
+        vis.to_window_focus();
+    },
     doneSetup: function(){
         let ds = model.populationDataset();
         view.loadDataDisplay(ds);
