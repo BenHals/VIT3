@@ -114,7 +114,7 @@ const vis = {
         let scale = d3.scaleLinear().domain(ds_domain).nice();
         scale.range(ds_range)
         const svg = document.querySelector(container_svg); 
-        let sample_elements = createDistribution(distribution, this.options, this.areas, this.areas[`${area}display`], ds_domain, ds_range, dimensions, `distribution-container`, svg, false, get_in_ci, pop_stat);
+        let sample_elements = createDistribution(distribution, this.options, this.areas, this.areas[`${area}display`], ds_domain, ds_range, dimensions, `distribution-container`, svg, false, get_in_ci, pop_stat, this.population_dataset.CI, this.population_dataset.largeCI);
         createAxis(scale, this.areas[`${area}axis`], dimensions, `${name}_axis`, svg, false)
     },
     showSampleGhost: function(sample_id){
@@ -160,13 +160,13 @@ const vis = {
         }
     },
     hideCI: function(){
-        let ci = document.querySelectorAll('.ci');
+        let ci = document.querySelectorAll('.ci, .large-ci');
         for(g of ci){
             g.style.display = 'none';
         }
     },
     showCI: function(){
-        let ci = document.querySelectorAll('.ci');
+        let ci = document.querySelectorAll('.ci, .large-ci');
         for(g of ci){
             g.style.display = null;
         }
@@ -330,7 +330,7 @@ const vis = {
         //     this.setProgress(1);
         // }
         // this.last_animation_type = "ci";
-        let animation = makeCIAnimation(this, speed, tail_only);
+        let animation = makeCIAnimation(this, speed, tail_only, large);
         this.animation = animation;
         this.animation.start();
         this.paused = false;

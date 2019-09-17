@@ -359,6 +359,7 @@ const model = {
             });
         }
         this.populationDS.largeCI = this.largeCI;
+        this.populationDS.CI = this.CI;
         return this.populationDS;
     },
 
@@ -480,6 +481,24 @@ const model = {
             }
             await Promise.all(init_samples);
         }
+        let population_stat = this.populationDS.statistics.overall.analysis[this.module_options.Statistic][this.module_options.Analysis];
+        let distribution_stats = getDistributionStats(this.distribution);
+        let tail_total = this.distribution.length;
+        let tail_count = 0;
+        let min_in_ci = null;
+        let max_in_ci = null;
+        for(let ls = 0; ls < this.distribution.length; ls++){
+            let data_stat = this.distribution[ls];
+            let in_ci = this.selected_module.inCI(distribution_stats, this.populationDS.statistics, population_stat, data_stat);
+            if(in_ci) {
+                tail_count++;
+                if(min_in_ci == null || data_stat < min_in_ci) min_in_ci = data_stat;
+                if(max_in_ci == null || data_stat > max_in_ci) max_in_ci = data_stat;
+            }
+        }
+        this.CI = [min_in_ci, max_in_ci, tail_count, tail_total];
+        this.populationDS.CI = this.CI;
+        this.sampleFinished = true;
         if(gen_large){
             this.largeSampleStats = [];
             for(let n = 0; n < 10; n++){
@@ -493,27 +512,27 @@ const model = {
                 await Promise.all(large_sample);
                 await new Promise((resolve, reject) => {setTimeout(() => {resolve('done')}, 500)});
             }
-            // let stat = getPopulationStatistic(this.populationDS, this.getOptions().Statistic, this.dimensions)[0];
-            stat = this.populationDS.statistics.overall.analysis[this.module_options.Statistic][this.module_options.Analysis];
-            let sorted_dist = this.largeSampleStats.sort(function(a, b){return Math.abs(Array.isArray(a) ? a[1] : a - stat) - Math.abs(Array.isArray(b) ? b[1] : b - stat)});
-            let min_stat = null;
-            let max_stat = null;
-            let in_ci_count = 0;
-            for(let ls = 0; ls < sorted_dist.length; ls++){
-                let in_ci = this.selected_module.inCI(sorted_dist, sorted_dist[ls], stat);
-                if(in_ci) in_ci_count++;
-                if(in_ci && (min_stat == null || Array.isArray(sorted_dist[ls]) ? sorted_dist[ls][1] : sorted_dist[ls] < min_stat)) min_stat = Array.isArray(sorted_dist[ls]) ? sorted_dist[ls][1] : sorted_dist[ls];
-                if(in_ci && (max_stat == null || Array.isArray(sorted_dist[ls]) ? sorted_dist[ls][1] : sorted_dist[ls] > max_stat)) max_stat = Array.isArray(sorted_dist[ls]) ? sorted_dist[ls][1] : sorted_dist[ls];
+            let large_distribution_stats = getDistributionStats(this.largeSampleStats);
+            let large_tail_total = this.largeSampleStats.length;
+            let large_tail_count = 0;
+            let large_min_in_ci = null;
+            let large_max_in_ci = null;
+            for(let ls = 0; ls < this.largeSampleStats.length; ls++){
+                let data_stat = this.largeSampleStats[ls];
+                let in_ci = this.selected_module.inCI(large_distribution_stats, this.populationDS.statistics, population_stat, data_stat);
+                if(in_ci) {
+                    large_tail_count++;
+                    if(large_min_in_ci == null || data_stat < large_min_in_ci) large_min_in_ci = data_stat;
+                    if(large_max_in_ci == null || data_stat > large_max_in_ci) large_max_in_ci = data_stat;
+                }
             }
-            this.largeCI = [min_stat, max_stat, in_ci_count];
-            this.populationDS.largeCI = [min_stat, max_stat, in_ci_count];
+            this.largeCI = [large_min_in_ci, large_max_in_ci, large_tail_count, large_tail_total];
+            this.populationDS.largeCI = this.largeCI;
             this.largeSampleFinished = true;
             this.largeSampleStats = [];
         }
         this.largeSampleFinished = true;
         controller.allSamplesTaken();
-
-        
     },
     genSample: async function(population_data, sample_size, sample_generator, stat, i, total, progresstotal){
         // if(window.Worker){

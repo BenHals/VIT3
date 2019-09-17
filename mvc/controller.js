@@ -293,7 +293,7 @@ const controller = {
     },
     allSamplesTaken: function(){
         ac_loadingDone();
-        let ds = model.populationDataset();
+        let ds = model.populationDS;
         vis.initOptions(model.getVisOptions());
         vis.initDimensions(model.dimensions, model.getSampleDimensions());
         vis.initPopulation(ds);

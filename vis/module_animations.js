@@ -1,16 +1,19 @@
 
-function makeCIAnimation(vis, speed, tail_only){
+function makeCIAnimation(vis, speed, tail_only, large){
+    let ci_id = large ? 'large-ci' : 'ci';
+    let ci_selector = large ? '.large-ci' : '.ci';
     let option_ci_elements = {
-        'Point Value': ['left-ci-arrow', 'left-ci-text', 'right-ci-arrow', 'right-ci-text', 'top-ci-arrow', 'tops1-ci-arrow', 'tops2-ci-arrow'],
-        'Difference': (!tail_only ? ['left-ci-arrow', 'left-ci-text', 'right-ci-arrow', 'right-ci-text', 'top-ci-arrow', 'pop-ci-arrow', 'arrow_main_line', 'arrow_arm_1', 'arrow_arm_2', 'pop-ci-text'] : ['pop-ci-arrow', 'arrow_main_line', 'arrow_arm_1', 'arrow_arm_2', 'pop-ci-text', 'tail-ci-text']),
-        'Average Deviation': ['pop-ci-arrow', 'arrow_main_line', 'arrow_arm_1', 'arrow_arm_2', 'pop-ci-text', 'tail-ci-text'],
-        'F Stat': ['pop-ci-arrow', 'arrow_main_line', 'arrow_arm_1', 'arrow_arm_2', 'pop-ci-text', 'tail-ci-text'],
+        'Point Value': [`left-${ci_id}-arrow`, `left-${ci_id}-text`, `right-${ci_id}-arrow`, `right-${ci_id}-text`, `top-${ci_id}-arrow`, `tops1-${ci_id}-arrow`, `tops2-${ci_id}-arrow`],
+        'Difference': (!tail_only ? [`left-${ci_id}-arrow`, `left-${ci_id}-text`, `right-${ci_id}-arrow`, `right-${ci_id}-text`, `top-${ci_id}-arrow`, `pop-${ci_id}-arrow`, `arrow_main_line`, `arrow_arm_1`, `arrow_arm_2`, `pop-${ci_id}-text`] : [`pop-${ci_id}-arrow`, `arrow_main_line`, `arrow_arm_1`, `arrow_arm_2`, `pop-${ci_id}-text`, `tail-${ci_id}-text`]),
+        'Average Deviation': [`pop-${ci_id}-arrow`, `arrow_main_line`, `arrow_arm_1`, `arrow_arm_2`, `pop-${ci_id}-text`, `tail-${ci_id}-text`],
+        'F Stat': [`pop-${ci_id}-arrow`, `arrow_main_line`, `arrow_arm_1`, `arrow_arm_2`, `pop-${ci_id}-text`, `tail-${ci_id}-text`],
         'Confidence Interval': []
     };
     let animation = {
         total_duration: 1000 / speed,
         start: function(){
-            let ci = document.querySelectorAll('.ci');
+            vis.hideCI();
+            let ci = document.querySelectorAll(ci_selector);
             for(g of ci){
                 if (option_ci_elements[vis.options.Analysis].includes(g.id)){
                     g.style.display = null;
