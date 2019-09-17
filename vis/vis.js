@@ -177,7 +177,7 @@ const vis = {
             this.current_sample = 0;
             this.hideGhosts();
         }
-        if(model.selected_module.sample_reset_index && this.current_sample % model.selected_module.sample_reset_index == 0){
+        if(this.module.sample_reset_index && this.current_sample % this.module.sample_reset_index == 0){
             this.hideDistribution();
         }
         if(reps <= 20){
@@ -215,34 +215,34 @@ const vis = {
                     this.last_shown = self.current_sample;
                 },
                 percentUpdate: function(p){
-                    if(model.selected_module.sample_reset_index){
+                    if(self.module.sample_reset_index){
                         self.hideDistribution();
                     }
                     let frame_sample_index = Math.min(Math.floor(rep_range[0] + (p * rep_range[2])), rep_range[1]);
                     let num_skipped_samples = frame_sample_index - this.last_shown - 1;
                     if (num_skipped_samples > 0){
-                        if(!model.selected_module.sample_reset_index){
+                        if(!self.module.sample_reset_index){
                             let skipped_indexes = [...Array(num_skipped_samples).keys()].map(e => e + this.last_shown + 1);
                             for(let skip_i of skipped_indexes){
                                 self.showSampleGhost(skip_i);
                                 self.showSampleDistribution(skip_i);
                             }
                         }else{
-                            let skipped_indexes = [...Array((frame_sample_index % model.selected_module.sample_reset_index)).keys()].map(e => Math.max(frame_sample_index - (e + 1), 0));
+                            let skipped_indexes = [...Array((frame_sample_index % self.module.sample_reset_index)).keys()].map(e => Math.max(frame_sample_index - (e + 1), 0));
                             for(let skip_i of skipped_indexes){
                                 self.showSampleGhost(skip_i);
                                 self.showSampleDistribution(skip_i);
                             } 
                         }
                     }else{
-                        if(!model.selected_module.sample_reset_index){
+                        if(!self.module.sample_reset_index){
                             let backtracked_indicies = [...Array(num_skipped_samples * -1).keys()].map(e => (this.last_shown) - e);
                             for(let back_i of backtracked_indicies){
                                 self.hideSampleGhost(back_i);
                                 self.hideSampleDistribution(back_i);
                             }
                         }else{
-                            let skipped_indexes = [...Array((frame_sample_index % model.selected_module.sample_reset_index)).keys()].map(e => Math.max(frame_sample_index - (e - 1), 0));
+                            let skipped_indexes = [...Array((frame_sample_index % self.module.sample_reset_index)).keys()].map(e => Math.max(frame_sample_index - (e - 1), 0));
                             for(let skip_i of skipped_indexes){
                                 self.showSampleGhost(skip_i);
                                 self.showSampleDistribution(skip_i);
