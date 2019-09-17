@@ -1,3 +1,29 @@
+
+function makeCIAnimation(vis, speed, tail_only){
+    let option_ci_elements = {
+        'Point Value': ['left-ci-arrow', 'left-ci-text', 'right-ci-arrow', 'right-ci-text', 'top-ci-arrow', 'tops1-ci-arrow', 'tops2-ci-arrow'],
+        'Difference': (!tail_only ? ['left-ci-arrow', 'left-ci-text', 'right-ci-arrow', 'right-ci-text', 'top-ci-arrow', 'pop-ci-arrow', 'arrow_main_line', 'arrow_arm_1', 'arrow_arm_2', 'pop-ci-text'] : ['pop-ci-arrow', 'arrow_main_line', 'arrow_arm_1', 'arrow_arm_2', 'pop-ci-text', 'tail-ci-text']),
+        'Average Deviation': ['pop-ci-arrow', 'arrow_main_line', 'arrow_arm_1', 'arrow_arm_2', 'pop-ci-text', 'tail-ci-text'],
+        'F Stat': ['pop-ci-arrow', 'arrow_main_line', 'arrow_arm_1', 'arrow_arm_2', 'pop-ci-text', 'tail-ci-text'],
+        'Confidence Interval': []
+    };
+    let animation = {
+        total_duration: 1000 / speed,
+        start: function(){
+            let ci = document.querySelectorAll('.ci');
+            for(g of ci){
+                if (option_ci_elements[vis.options.Analysis].includes(g.id)){
+                    g.style.display = null;
+                }
+            }
+        },
+        percentUpdate: function(p){
+            return p >= 1;
+        }
+    }
+    return animation;
+}
+
 function ma_createAnimation(animation, pop_dimensions, sample_dimensions, static_elements, dynamic_elements, module, speed, sample_index, include_distribution, animate_points){
     let stage = null;
     let sample_length = vis.samples[sample_index].all.length;

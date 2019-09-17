@@ -316,10 +316,9 @@ const vis = {
             this.loop_started = true;
         }
     },
-    initCIAnimation(large){
-        this.showCI();
-        // this.reps_left = 0;
-        // let speed = 1;
+    initCIAnimation(large, tail_only = false){
+        this.reps_left = 0;
+        let speed = 1;
         // this.include_distribution = false;
         // let animation = new Animation(`ci`);
         // ma_createCIAnimation(animation, this.population_dimensions, this.sample_dimensions, this.staticElements, this.dynamicElements, this.module, speed, this.current_sample, this.areas, large);
@@ -331,16 +330,20 @@ const vis = {
         //     this.setProgress(1);
         // }
         // this.last_animation_type = "ci";
-        // this.paused = false;
-        // ac_unpause();
-        // this.last_frame = window.performance.now();
-        // if(!this.loop_started) {
-        //     this.loop(window.performance.now());
-        //     this.loop_started = true;
-        // }
+        let animation = makeCIAnimation(this, speed, tail_only);
+        this.animation = animation;
+        this.animation.start();
+        this.paused = false;
+        ac_unpause();
+        this.last_frame = window.performance.now();
+        if(!this.loop_started) {
+            this.loop(window.performance.now());
+            this.loop_started = true;
+        }
     },
     initRandTestCIAnimation(large){
-        this.showCI();
+        this.initCIAnimation(large, true);
+        // this.showCI();
         // this.reps_left = 0;
         // let speed = 1;
         // this.include_distribution = false;

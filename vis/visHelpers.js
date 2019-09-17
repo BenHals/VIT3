@@ -466,7 +466,7 @@ function createDistribution(distribution, options, areas, bounds, domain, range,
         ci_container.insertAdjacentElement('beforeend', top_ci_arrow);
 
         const top_ci_arrow_sec1 = document.createElementNS("http://www.w3.org/2000/svg", 'line');
-        top_ci_arrow_sec1.id = "top-ci-arrow";
+        top_ci_arrow_sec1.id = "tops1-ci-arrow";
         top_ci_arrow_sec1.classList.add("ci");
         top_ci_arrow_sec1.setAttribute('x1', linearScale(min_in_ci, domain, range));
         top_ci_arrow_sec1.setAttribute('x2', linearScale(max_in_ci, domain, range));
@@ -476,7 +476,7 @@ function createDistribution(distribution, options, areas, bounds, domain, range,
         ci_container.insertAdjacentElement('beforeend', top_ci_arrow_sec1);
 
         const top_ci_arrow_sec0 = document.createElementNS("http://www.w3.org/2000/svg", 'line');
-        top_ci_arrow_sec0.id = "top-ci-arrow";
+        top_ci_arrow_sec0.id = "tops2-ci-arrow";
         top_ci_arrow_sec0.classList.add("ci");
         top_ci_arrow_sec0.setAttribute('x1', linearScale(min_in_ci, domain, range));
         top_ci_arrow_sec0.setAttribute('x2', linearScale(max_in_ci, domain, range));
@@ -518,7 +518,7 @@ function createDistribution(distribution, options, areas, bounds, domain, range,
         tail_ci_text.setAttribute('x', linearScale(pop_stat, domain, range) - 1);
         tail_ci_text.setAttribute('y', bounds.top + (bounds.bottom - bounds.top) / 8);
         tail_ci_text.style.alignmentBaseline = 'ideographic';
-        tail_ci_text.style.textAnchor = 'end';
+        tail_ci_text.style.textAnchor = linearScale(pop_stat, domain, range) > range[0] + (range[1] - range[0]) / 2 ? 'end' : 'start';
         tail_ci_text.style.display = 'none';
         tail_ci_text.textContent = `Tail Proportion \n = ${tail_count} / ${tail_total} = ${Math.round(tail_count / tail_total * 100) / 100} `;
         ci_container.insertAdjacentElement('beforeend', tail_ci_text);
