@@ -313,6 +313,24 @@ function createAnalysisMarkersFromDataset(dataset, options, areas, bounds, domai
         }
 
     }
+    if((is_population ? options.popAnalysis : options.Analysis) == "Confidence Interval"){
+        const factor_stat = dataset.statistics.overall.analysis[options.Statistic][is_population ? options.popAnalysis : options.Analysis];
+        const factor_stat_1_screen = linearScale(factor_stat[0], domain, range);
+        const factor_stat_2_screen = linearScale(factor_stat[2], domain, range);
+
+        const line_y = bounds.bottom - ((bounds.bottom - bounds.top)/8) * 3;
+        let ci_line = document.createElementNS("http://www.w3.org/2000/svg", 'line');
+        ci_line.id = `analysis-ci-line`;
+        ci_line.setAttribute('class', 'analysis');
+        ci_line.setAttribute('x1', factor_stat_1_screen);
+        ci_line.setAttribute('y1', line_y);
+        ci_line.setAttribute('x2', factor_stat_2_screen);
+        ci_line.setAttribute('y2', line_y);
+        ci_line.setAttribute('data-stat', `${factor_stat_1_screen} - ${factor_stat_2_screen}`);
+        ci_line.setAttribute('shape-rendering', 'crispEdges');
+        ci_line.style.stroke = "black";
+        analysis_group.insertAdjacentElement('beforeEnd', ci_line);
+    }
     
     let factor_stats = dataset.statistics.overall.point_stats;
     let stat = factor_stats[options.Statistic];
