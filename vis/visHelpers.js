@@ -68,27 +68,32 @@ function createElementsFromDataset(dataset, options, bounds, domain, range, dime
     
         for(let f = 0; f < num_factors; f++){
             const factor_label = factor_labels[f];
-            const data = dataset.all.filter(e => !dimensions.has_factors ? true : e[dimensions[1].name] == factor_label).map(e => e[dimensions[0].name]);
+            const all_data = dataset.all.filter(e => !dimensions.has_factors ? true : e[dimensions[1].name] == factor_label);
+            const data = all_data.map(e => e[dimensions[0].name]);
+            const ids = all_data.map(e => e.id);
             let factor_bounds = {left:range[0], right: range[1], top:bounds.split(num_factors, f)[1] + bounds.margin, bottom: bounds.split(num_factors, f+1)[1] - bounds.margin};
 
             let factor_group = null;
             if(dimensions[0].type == 'numeric'){
-                factor_group = createDatapointHeap(data, factor_bounds, bounds, domain, range, num_factors, `#y_factor_${f}`, f, is_population)
+                factor_group = createDatapointHeap(data, ids, factor_bounds, bounds, domain, range, num_factors, `#y_factor_${f}`, f, is_population)
             }else{
-                factor_group = createProportionBar(data, factor_bounds, bounds, domain, range, num_factors, `#y_factor_${f}`, f, dimensions, is_population)
+                factor_group = createProportionBar(data, all_data, factor_bounds, bounds, domain, range, dimensions[0].name, `#y_factor_${f}`, f, dimensions, is_population)
             }
             label_group.insertAdjacentElement('beforeend', factor_group);
         }
     
 }
 
-function createProportionBar(data, factor_bounds, bounds, domain, range, num_factors, name, factor_id, dimensions, is_population){
+function createProportionBar(data, all_data, factor_bounds, bounds, domain, range, factor_dim_name, name, factor_id, dimensions, is_population){
     let group = document.createElementNS("http://www.w3.org/2000/svg", 'g');
     group.id = name;
 
     const focus = dimensions[0].focus;
+    
     const focus_partition = data.filter(e => e == focus);
+    const focus_data = all_data.filter(e => e[factor_dim_name] == focus);
     const other_partition = data.filter(e => e != focus);
+    const other_data = all_data.filter(e => e[factor_dim_name] != focus);
 
     const focus_proportion = focus_partition.length / data.length || 0;
     const focus_proportion_screen_bounds = {left: linearScale(0, domain, range), right: linearScale(focus_proportion, domain, range), label: focus, num_items: focus_partition.length}
@@ -113,23 +118,28 @@ function createProportionBar(data, factor_bounds, bounds, domain, range, num_fac
         let text_color = d3.hsl(config.groupColorsList[b]);
         text_color.l = 0.9;
         let text_opacity = 0.75;
-        let rect_label = document.createElementNS("http://www.w3.org/2000/svg", 'text');
-        rect_label.setAttribute('x', rect.left + Math.min((rect.right - rect.left)*0.1, (factor_bounds.bottom - factor_bounds.top)*0.1, 5));
-        rect_label.setAttribute('y', factor_bounds.bottom - (factor_bounds.bottom - factor_bounds.top)/2);
-        rect_label.style.alignmentBaseline = 'central';
-        rect_label.style.textAnchor = 'start';
-        // rect_label.style.stroke = d3.hsl(config.groupColorsList[b]).brighter();
-        // rect_label.style.fill = d3.hsl(config.groupColorsList[b]).brighter();
-        rect_label.style.fill = text_color;
-        rect_label.style.stroke = rect_color;
-        rect_label.style.fillOpacity = text_opacity;
 
-        // rect_label.style.stroke = d3.hsl(config.groupColorsList[b]).brighter();
-        rect_label.style.fontSize = Math.min((rect.right - rect.left), (factor_bounds.bottom - factor_bounds.top) * 1.2, vmin(6));
-        rect_label.textContent = rect.label;
-        rect_label.setAttribute('class', 'pop-rect-label');
-        rect_label.id = `pop_id_r${b}`;
-        group.insertAdjacentElement('beforeEnd', rect_label);
+        let rect_label = null;
+        if(factor_id == 0 && is_population){
+            let label_fontsize = Math.min((bounds.margin) * 5, vmin(6));
+            rect_label = document.createElementNS("http://www.w3.org/2000/svg", 'text');
+            // rect_label.setAttribute('x', rect.left + Math.min((rect.right - rect.left)*0.1, (factor_bounds.bottom - factor_bounds.top)*0.1, 5));
+            rect_label.setAttribute('x', linearScale(domain[0] + (domain[1] - domain[0])/6 * (b == 0 ? 2 : 4), domain, range) + (b == 0 ? -(label_fontsize /5) : (label_fontsize / 5)));
+            rect_label.setAttribute('y', bounds.top);
+            // rect_label.setAttribute('y', factor_bounds.bottom - (factor_bounds.bottom - factor_bounds.top)/2);
+            rect_label.style.alignmentBaseline = 'central';
+            rect_label.style.textAnchor = b == 0 ? 'end' : 'start';
+            // rect_label.style.stroke = d3.hsl(config.groupColorsList[b]).brighter();
+            // rect_label.style.fill = d3.hsl(config.groupColorsList[b]).brighter();
+            rect_label.style.fill = text_color;
+            rect_label.style.stroke = rect_color;
+            // rect_label.style.stroke = d3.hsl(config.groupColorsList[b]).brighter();
+            rect_label.style.fontSize = label_fontsize;
+            rect_label.textContent = rect.label;
+            rect_label.setAttribute('class', 'pop-rect-label');
+            rect_label.id = `pop_id_r${b}`;
+            group.insertAdjacentElement('beforeEnd', rect_label);
+        }
 
         let rect_num = document.createElementNS("http://www.w3.org/2000/svg", 'text');
         rect_num.setAttribute('x', rect.left + (rect.right - rect.left)/2);
@@ -193,6 +203,8 @@ function createProportionBar(data, factor_bounds, bounds, domain, range, num_fac
             datapoint_svg.style.fill = rect_color.brighter();
             datapoint_svg.style.stroke = rect_color.darker();
             datapoint_svg.setAttribute('class', 'datapoint');
+            datapoint_svg.setAttribute('data-did', (b == 0 ? focus_data : other_data)[i].id);
+            datapoint_svg.setAttribute('data-sid', i);
             datapoint_svg.id = `pop_id${i}`;
             rect_group.insertAdjacentElement('beforeEnd', datapoint_svg);
             r++;
@@ -202,13 +214,13 @@ function createProportionBar(data, factor_bounds, bounds, domain, range, num_fac
             }
         }
         // group.insertAdjacentElement('afterbegin', rect_group);
-        group.insertBefore(rect_group, rect_label);
+        group.insertBefore(rect_group, rect_label || rect_num);
 
     
     }
     return group;
 }
-function createDatapointHeap(data, factor_bounds, bounds, domain, range, num_factors, name, factor_id, is_population, dp_class = 'datapoint', base_id = 'pop_id'){
+function createDatapointHeap(data, ids, factor_bounds, bounds, domain, range, num_factors, name, factor_id, is_population, dp_class = 'datapoint', base_id = 'pop_id'){
     if (num_factors == 1 && is_population) {
         factor_bounds.bottom -= (factor_bounds.bottom - factor_bounds.top) / 4;
     }
@@ -224,6 +236,7 @@ function createDatapointHeap(data, factor_bounds, bounds, domain, range, num_fac
     let seen_buckets = {};
     for(let i in data){
         let datapoint = data[i];
+        let id = ids[i];
         let dp_center = Array.isArray(datapoint) ? datapoint[1] : datapoint;
         let dp_range = Array.isArray(datapoint) ? [datapoint[0], datapoint[2]] : null;
         
@@ -235,6 +248,8 @@ function createDatapointHeap(data, factor_bounds, bounds, domain, range, num_fac
         datapoint_svg.style.fill = num_factors == 1 ? 'grey' : config.groupColorsList[factor_id];
         datapoint_svg.setAttribute('class', dp_class);
         datapoint_svg.setAttribute('data-stat', dp_center);
+        datapoint_svg.setAttribute('data-did', id);
+        datapoint_svg.setAttribute('data-sid', i);
         datapoint_svg.id = `${base_id}${i}`;
         group.insertAdjacentElement('beforeEnd', datapoint_svg);
     }
