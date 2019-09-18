@@ -1,3 +1,106 @@
+
+function makeBaseAnimation(vis, speed, reps){
+    let durations = {
+        "fadein_duration": 1000 / speed,
+        "drop_duration": 1000 / speed,
+    }
+    let animation = {
+        total_duration: Object.keys(durations).map((k) => durations[k]).reduce((a, b) => a + b, 0),
+        start: function(){
+            let self = this;
+            this.sample_id = `sample_${vis.current_sample}`;
+            this.sample_data = vis.samples[vis.current_sample];
+            let sample_data_ids = this.sample_data.all.map(e => e.id);
+            vis.initSample(vis.current_sample);
+            vis.current_sample++;
+            this.sample_elements = document.querySelectorAll(`#${this.sample_id} .datapoint`);
+            this.population_elements = document.querySelectorAll(`#population .datapoint`);
+            this.matched_population_elements = [...this.population_elements].filter((e) => {return sample_data_ids.includes(parseInt(e.dataset.did))});
+            this.animation_controller = anime.timeline({
+                // duration: this.total_duration,
+                autoplay: false,
+                easing: this.total_duration < 2000 ? 'linear' : 'easeOutElastic'
+                
+            });
+            this.animation_controller.add({
+                targets: this.matched_population_elements,
+                fill: function(el, i) {return [d3.color(anime.get(el, 'fill')).toString(), d3.color('red').toString()]},
+                delay: anime.stagger(50),
+                duration: durations.fadein_duration,
+                // begin: () => {
+                //     anime.set(this.sample_elements, {
+                //         'fill-opacity': 0,
+                //         'stroke-opacity': 0
+                //     });
+                // },
+                // complete: () => {
+                //     anime.set(this.sample_elements, {
+                //         'fill-opacity': 1,
+                //         'stroke-opacity': 1,
+                //         'fill': d3.color('red').toString()
+                //     });
+                // }
+            });
+            this.animation_controller.add({
+                targets: this.sample_elements,
+                'fill-opacity': [0, 1],
+                'stroke-opacity': [0, 1],
+                'fill': [d3.color('red').toString(), d3.color('red').toString()],
+                duration: durations.drop_duration,
+
+            });
+            this.animation_controller.add({
+                targets: this.sample_elements,
+                cy: function(el, i){
+                    return [(durations.drop_duration > 100 && !(vis.include_distribution && reps > 1) ? self.matched_population_elements.find((pel) => pel.dataset.did == el.dataset.did).getAttribute('cy') : el.getAttribute('cy')), el.getAttribute('cy')];
+                },
+                delay: durations.drop_duration > 100 && !(vis.include_distribution && reps > 1) ? anime.stagger(50) : 0,
+                duration: durations.drop_duration,
+                
+            }, `+=${durations.fadein_duration / 5}`);
+        },
+        percentUpdate: function(p){
+            this.animation_controller.seek(p * this.animation_controller.duration);
+            return p >= 1;
+        },
+        remove: function(){
+            this.animation_controller.seek(0);
+        }
+    }
+    this.total_duration = animation.duration;
+    return animation;
+}
+function makeCIAnimation(vis, speed, tail_only, large){
+    let ci_id = large ? 'large-ci' : 'ci';
+    let ci_selector = large ? '.large-ci' : '.ci';
+    let option_ci_elements = {
+        'Point Value': [`left-${ci_id}-arrow`, `left-${ci_id}-text`, `right-${ci_id}-arrow`, `right-${ci_id}-text`, `top-${ci_id}-arrow`, `tops1-${ci_id}-arrow`, `tops2-${ci_id}-arrow`],
+        'Difference': (!tail_only ? [`left-${ci_id}-arrow`, `left-${ci_id}-text`, `right-${ci_id}-arrow`, `right-${ci_id}-text`, `top-${ci_id}-arrow`, `pop-${ci_id}-arrow`, `arrow_main_line`, `arrow_arm_1`, `arrow_arm_2`, `pop-${ci_id}-text`] : [`pop-${ci_id}-arrow`, `arrow_main_line`, `arrow_arm_1`, `arrow_arm_2`, `pop-${ci_id}-text`, `tail-${ci_id}-text`]),
+        'Average Deviation': [`pop-${ci_id}-arrow`, `arrow_main_line`, `arrow_arm_1`, `arrow_arm_2`, `pop-${ci_id}-text`, `tail-${ci_id}-text`],
+        'F Stat': [`pop-${ci_id}-arrow`, `arrow_main_line`, `arrow_arm_1`, `arrow_arm_2`, `pop-${ci_id}-text`, `tail-${ci_id}-text`],
+        'Confidence Interval': []
+    };
+    let animation = {
+        total_duration: 1000 / speed,
+        start: function(){
+            vis.hideCI();
+            let ci = document.querySelectorAll(ci_selector);
+            for(g of ci){
+                if (option_ci_elements[vis.options.Analysis].includes(g.id)){
+                    g.style.display = null;
+                }
+            }
+        },
+        percentUpdate: function(p){
+            return p >= 1;
+        },
+        remove: function(){
+            
+        }
+    }
+    return animation;
+}
+
 function ma_createAnimation(animation, pop_dimensions, sample_dimensions, static_elements, dynamic_elements, module, speed, sample_index, include_distribution, animate_points){
     let stage = null;
     let sample_length = vis.samples[sample_index].all.length;

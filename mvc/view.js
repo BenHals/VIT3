@@ -52,8 +52,8 @@ const view = {
 
     resizeCanvas: function(init){
         if(!document.querySelector('#canvasWrapper')) return {"scale_x": 1, "scale_y": 1,  "PIXEL_RATIO": 1};
-        let vis_width = document.querySelector('#canvasWrapper').offsetWidth;
-        let vis_height = document.querySelector('#canvasWrapper').offsetHeight;
+        let vis_width = document.querySelector('#canvasWrapper').clientWidth;
+        let vis_height = document.querySelector('#canvasWrapper').clientHeight;
         let popSVG = document.querySelector('#popSVG');
         let dynamicSVG = document.querySelector('#dynamicSVG');
         let ghostSVG = document.querySelector('#ghostSVG');
@@ -66,15 +66,15 @@ const view = {
             popSVG.setAttribute('data-normHeight', vis_height);
             ghostSVG.setAttribute('data-normHeight', vis_height);
             
-            dynamicSVG.setAttribute('width', vis_width);
+            dynamicSVG.setAttribute('width', vis_width * 1.5);
             dynamicSVG.setAttribute('height', vis_height);
-            popSVG.setAttribute('width', vis_width);
-            ghostSVG.setAttribute('width', vis_width);
+            popSVG.setAttribute('width', vis_width * 1.5);
+            ghostSVG.setAttribute('width', vis_width * 1.5);
             popSVG.setAttribute('height', vis_height);
             ghostSVG.setAttribute('height', vis_height);
         }
-        let scale_factor = popSVG.getAttribute('width') / (popSVG.getAttribute('data-normWidth'))
         let canvas_rect = document.getElementById('canvasWrapper');
+        let scale_factor = vis_width / (popSVG.getAttribute('data-normWidth'))
         if(!canvas_rect){
             return {"scale_x": 1, "scale_y": 1,  "PIXEL_RATIO": 1};
         }

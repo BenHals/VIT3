@@ -87,6 +87,13 @@
   width: 100%;
   padding:5px;
 }
+#variableSelectM{
+  outline: none !important;
+  max-height:30vh;
+ /* height:400px;*/
+  width: 100%;
+  padding:0px;
+}
 
 #focusSelect, #statisticSelect{
   width:100%;
@@ -221,13 +228,20 @@ input[type="range"]::-webkit-slider-thumb {
   }
   .playSection {
     margin-top: 5px;
+  
   }
-  .playSection button{
-    margin:5px;
+  .playSection .btn-block{
+    margin:1%;
+    width: 98%;
+    
   }
 
   .panelButton {
     padding-right: 0px !important;
+  }
+  .in-header-btn {
+    margin: 0px;
+    float: right;
   }
 
   .radioOption {
@@ -267,7 +281,11 @@ input[type="range"]::-webkit-slider-thumb {
     font-size: 2vmin;
   }
   text {
-    font-size: 1vmin;
+    font-size: 1.5vmin;
+    stroke: white;
+    stroke-width: 4px;
+    stroke-opacity: 0.8;
+    paint-order: stroke fill;
   }
   line{
     stroke: black;

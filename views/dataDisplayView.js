@@ -35,10 +35,10 @@ function dd_populateInit(dataset, dimensions, sample_dimensions, no_sample){
     document.querySelector('#sampleNum').insertAdjacentHTML('beforeend', `<th colspan=${dimensions.length}>Population</th>`);
     document.querySelector('#sampleNum').insertAdjacentHTML('beforeend', `<th colspan=${dimensions.length}>Sample</th>`);
     for(let c = 0; c < dimensions.length; c++){
-        document.querySelector('#tableHeadings').append(`<th>${dimensions[c].name}</th>`);
+        document.querySelector('#tableHeadings').insertAdjacentHTML('beforeend', `<th>${dimensions[c].name}</th>`);
     }
     for(let c = 0; c < sample_dimensions.length; c++){
-        document.querySelector('#tableHeadings').append(`<th>${sample_dimensions[c].name}</th>`);
+        document.querySelector('#tableHeadings').insertAdjacentHTML('beforeend', `<th>${sample_dimensions[c].name}</th>`);
     }
     dd_populateRows(dataset, dimensions, sample_dimensions);
     dd_updateDatapoints(dataset, dimensions, sample_dimensions, true);
@@ -54,23 +54,26 @@ function dd_populateRows(dataset, dimensions, sample_dimensions){
         tr.setAttribute('data-id', r);
         document.querySelector('#prunedTable tbody').insertAdjacentElement('beforeend', tr);
         for(let c = 0; c < dimensions.length; c++){
-            // let dim_name = dimensions[c].name;
+            let dim_name = dimensions[c].name;
             // var td = $(`<td>${row[dim_name]}</td>`);
-            // tr.append(td);
-            // if(dimensions[c].type == 'categoric'){
-            //     var colorIndex = dimensions[c].factors.indexOf(row[dim_name]);
-            //     td.css("color", c == 0 ? config.proportionColorsList[colorIndex] : config.groupColorsList[colorIndex]);
-            // }   
+            // tr.insertAdjacentHTML('beforeend', td);
             let td = document.createElement('td');
+            if(dimensions[c].type == 'categoric'){
+                var colorIndex = dimensions[c].factors.indexOf(row[dim_name]);
+                td.style["color"] = c == 0 ? config.proportionColorsList[colorIndex] : config.groupColorsList[colorIndex];
+            }   
+            td.textContent = row[dim_name];
             tr.insertAdjacentElement('beforeend', td);
-            // if(dimensions[c].type == 'categoric'){
-            //     var colorIndex = dimensions[c].factors.indexOf(row[dim_name]);
-            //     td.css("color", c == 0 ? config.proportionColorsList[colorIndex] : config.groupColorsList[colorIndex]);
-            // } 
         }
         for(let c = 0; c < sample_dimensions.length; c++){
+            let dim_name  = sample_dimensions[c];
             let td = document.createElement('td');
             tr.insertAdjacentElement('beforeend', td);
+            if(sample_dimensions[c].type == 'categoric'){
+                var colorIndex = sample_dimensions[c].factors.indexOf(row[dim_name]);
+                td.textContent = row[dim_name];
+                td.style["color"] = c == 0 ? config.proportionColorsList[colorIndex] : config.groupColorsList[colorIndex];
+            } 
         }
     }
 }
@@ -82,10 +85,10 @@ function dd_updateDatapoints(dataset, dimensions, sample_dimensions, isPop){
     for([r, row] of [...rows].entries()){
         let td_elements = row.children;
         for([d, el] of [...td_elements].entries()){
-            if(d < start_td || d >= end_td) return;
+            if(d < start_td || d >= end_td) continue;
             let dim_index = d - start_td;
             let row_value = r >= dataset.all.length ? "" : dataset.all[r][sample_dimensions[dim_index].name];
-            el.innerHTML = row_value;
+            el.textContent = row_value;
             if(sample_dimensions[dim_index].type == 'categoric'){
                 let colorIndex = sample_dimensions[dim_index].factors.indexOf(row_value);
                 el.style.color = dim_index == 0 ? config.proportionColorsList[colorIndex] : config.groupColorsList[colorIndex];
@@ -326,11 +329,11 @@ function dd_linkSingleDatapoint(dataset, dimensions, sample_dimensions, sample_i
 }
 
 function dd_populateStatistics(dataset){
-    // $('#dataDisplay').append("<div id='popStats' class='panel panel-default'><div class='panel-heading'><p style='font-weight:bold'>Statistics</p></div></div>")
+    // $('#dataDisplay').insertAdjacentHTML('beforeend', "<div id='popStats' class='panel panel-default'><div class='panel-heading'><p style='font-weight:bold'>Statistics</p></div></div>")
     // for(var s in prunedData.statistics.overall){
     //     var stat = prunedData.statistics.overall[s]
     //     if(!isNaN(+stat)) stat = Math.round(+stat * 100)/100;
-    //     $('#popStats').append(`<p class='list-group-item'>${s} : ${stat}</p>`);
+    //     $('#popStats').insertAdjacentHTML('beforeend', `<p class='list-group-item'>${s} : ${stat}</p>`);
     // }
 }
 

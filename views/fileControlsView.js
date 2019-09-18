@@ -3,7 +3,7 @@ const use_var_dropdown = true;
 function generateFileOptionsHTML(module){
 return `
         <div id="fileOptions">
-            <button type="button" class="bluebutton btn btn-primary" aria-label="Back" onclick="fc_gotoHome('Home')">
+            <button type="button" class="btn btn-primary btn-block" aria-label="Back" onclick="fc_gotoHome('Home')">
                 <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
                 Back to Main Menu
             </button>
@@ -31,6 +31,7 @@ return `
             <div id="variableSelectHeader" class="panel-heading">
                 <h3 class="panel-title">Variables</h3>
             </div>
+            <select id="variableSelectM" class="panel-body selectpicker varselect" multiple='multiple'></select>
             <select id="variableSelect" class="panel-body selectpicker varselect" ${use_var_dropdown ? "" : "multiple='multiple'"}>
             </select>
             ${!use_var_dropdown ? "" : `<select id="variableSelect2" class="panel-body selectpicker varselect" ${use_var_dropdown ? "" : "multiple='multiple'"}>
@@ -68,9 +69,11 @@ function generateExampleFilesHTML(example_files){
     return html;
 }
 
-function generateColumnsHTML(columns, selected, selected_index = 0){
+function generateColumnsHTML(columns, selected, selected_index = 0, add_none = true){
     let html = ``;
-    html += (`<option class="list-group-item" value="None">None</option>`);
+    if(add_none){
+        html += (`<option class="list-group-item" value="None">None</option>`);
+    }
     for(var c in columns){
         let letter = columns[c][1].slice(0, 1);
         // let is_selected = $.inArray(columns[c][0], selected.slice(selected_index)) != -1;
@@ -173,12 +176,14 @@ function fc_populateColumnSelect(columns, selected){
     document.querySelector('#variablePanel').classList.remove('invisible');
     // $('#variablePanel').removeClass('invisible');
     //$('#variablePanel').show();
-    if(! use_var_dropdown){
-        document.querySelector('#variablePanel #variableSelect').setAttribute('size', Math.min(columns.length, 10));
-        // $('#variablePanel #variableSelect').attr('size', Math.min(columns.length, 10));
-    }
+    // if(! use_var_dropdown){
+    //     document.querySelector('#variablePanel #variableSelect').setAttribute('size', Math.min(columns.length, 10));
+    //     // $('#variablePanel #variableSelect').attr('size', Math.min(columns.length, 10));
+    // }
+    document.querySelector('#variablePanel #variableSelectM').setAttribute('size', Math.min(columns.length, 10));
     
     let columns_html = generateColumnsHTML(columns, selected);
+    document.querySelector('#variablePanel #variableSelectM').innerHTML = generateColumnsHTML(columns, selected, 0,  false);
     document.querySelector('#variablePanel #variableSelect').innerHTML = columns_html;
     // $('#variablePanel #variableSelect').html(columns_html);
     if(use_var_dropdown){
@@ -213,16 +218,16 @@ function fc_formatError(err){
 }
 
 function fc_tooManyVariables(err){
-    document.querySelector('#var-error').textContent("Too many columns selected");
+    document.querySelector('#var-error').textContent = "Too many columns selected";
     document.querySelector('#var-error').style.display = null;
 }
 function fc_notEnoughVariables(err){
-    document.querySelector('#var-error').textContent("Select a primary variable");
+    document.querySelector('#var-error').textContent = "Select a primary variable";
     document.querySelector('#var-error').style.display = null;
 }
 
 function fc_wrongModule(err){
-    document.querySelector('#var-error').textContent("Wrong column types for module");
+    document.querySelector('#var-error').textContent = "Wrong column types for module";
     document.querySelector('#var-error').style.display = null;
 }
 
