@@ -27,19 +27,6 @@ function makeBaseAnimation(vis, speed, reps){
                 fill: function(el, i) {return [d3.color(anime.get(el, 'fill')).toString(), d3.color('red').toString()]},
                 delay: anime.stagger(50),
                 duration: durations.fadein_duration,
-                // begin: () => {
-                //     anime.set(this.sample_elements, {
-                //         'fill-opacity': 0,
-                //         'stroke-opacity': 0
-                //     });
-                // },
-                // complete: () => {
-                //     anime.set(this.sample_elements, {
-                //         'fill-opacity': 1,
-                //         'stroke-opacity': 1,
-                //         'fill': d3.color('red').toString()
-                //     });
-                // }
             });
             this.animation_controller.add({
                 targets: this.sample_elements,
