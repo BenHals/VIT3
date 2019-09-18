@@ -212,7 +212,21 @@ const vis = {
             let speed = inherit_speed ? this.speed : (1 + 0.25*(reps - 1)) * (1 + 0.5 * include_distribution);
             this.speed = speed;
             this.include_distribution = include_distribution;
-            let animation = makeBaseAnimation(vis, speed, parseInt(reps));
+            // let animation = makeBaseAnimation(vis, speed, parseInt(reps));
+            let animation = {
+                total_duration: 1000 / speed,
+                start: function(){
+                    self.initSample(self.current_sample);
+                    self.current_sample++;
+                    this.last_shown = self.current_sample;
+                },
+                percentUpdate: function(p){
+                    return p >= 1;
+                },
+                remove: function(){
+            
+                }
+            }
             
             this.setAnimation(animation);
             this.animation.start();
