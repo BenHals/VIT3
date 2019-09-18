@@ -431,7 +431,7 @@ function createDistribution(distribution, options, areas, bounds, domain, range,
     }
     let factor_bounds = {left: bounds.left, right: bounds.right, top: bounds.top + bounds.margin, bottom: bounds.bottom - bounds.margin};
     if(options.Analysis != 'Confidence Interval'){
-        let distribution_points = createDatapointHeap(distribution, factor_bounds, bounds, domain, range, 1, 'distribution', 0, false, 'distribution', 'sample-id');
+        let distribution_points = createDatapointHeap(distribution, distribution.map((e, i) => i), factor_bounds, bounds, domain, range, 1, 'distribution', 0, false, 'distribution', 'sample-id');
         let i = 0;
         // let tail_total = distribution_points.childNodes.length;
         // let tail_count = 0;
