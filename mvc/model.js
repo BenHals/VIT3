@@ -348,7 +348,7 @@ const model = {
     populationDataset: function(){
         this.cleanData();
         let stat = this.genStatistics(this.cleaned_data, this.dimensions);
-        let statanalysis = this.genStatisticAnalysis(this.cleaned_data, this.dimensions);
+        let statanalysis = this.genStatisticAnalysis(this.cleaned_data, this.dimensions, true);
         this.populationDS = createDatasetMinimal(this.cleaned_data, this.dimensions, stat, statanalysis);
         // want to sort factors in terms of statistic
         if(this.dimensions.has_factors){
@@ -421,7 +421,7 @@ const model = {
         generator.both.push(stdGen('Standard Deviation', dimensions[0].name));
         return generator;
     },
-    genStatisticAnalysis: function(cleaned_data, dimensions){
+    genStatisticAnalysis: function(cleaned_data, dimensions, is_pop = false){
         let generator = {overall: [], // Statistics across all datapoints, I.E mean of everything
             fac1: [], // Statistics for each category of factor 1
             fac2: [], // Statistics for each category of factor 2
@@ -433,7 +433,7 @@ const model = {
             if(dimensions.length > 1){
                 generator.overall.push(avDevAnalysis('Average Deviation', dimensions[1].name, dimensions[1].factors));
                 generator.overall.push(fStatAnalysis('F Stat', dimensions[1].name, dimensions[1].factors));
-                generator.overall.push(differenceAnalysis('Difference', dimensions[1].name, dimensions[1].factors));
+                generator.overall.push(differenceAnalysis('Difference', dimensions[1].name, dimensions[1].factors, is_pop));
             }
             
         }else{
@@ -441,7 +441,7 @@ const model = {
             if(dimensions.length > 1){
                 generator.overall.push(avDevAnalysis('Average Deviation', dimensions[1].name, dimensions[1].factors));
                 generator.overall.push(fStatAnalysis('F Stat', dimensions[1].name, dimensions[1].factors));
-                generator.overall.push(differenceAnalysis('Difference', dimensions[1].name, dimensions[1].factors));
+                generator.overall.push(differenceAnalysis('Difference', dimensions[1].name, dimensions[1].factors, is_pop));
             }
 
         }

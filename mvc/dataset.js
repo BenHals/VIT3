@@ -205,12 +205,12 @@ function avDevAnalysis(stat_name, dim_name, factors){
         return avg / factors.length;
     }];
 }
-function differenceAnalysis(stat_name, dim_name, factors){
+function differenceAnalysis(stat_name, dim_name, factors, is_pop){
     return [stat_name, function(dp, group, total, group_stats, overall_stats, stat_name){
         if(factors.length < 2) return 0;
         const factor_1_stat = overall_stats.factor_2[factors[0]].point_stats[stat_name];
         const factor_2_stat = overall_stats.factor_2[factors[1]].point_stats[stat_name];
-        return factor_2_stat - factor_1_stat;
+        return is_pop ? Math.abs(factor_2_stat - factor_1_stat) : factor_2_stat - factor_1_stat;
     }];
 }
 
