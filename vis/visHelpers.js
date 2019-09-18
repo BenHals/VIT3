@@ -397,7 +397,7 @@ function createDistribution(distribution, options, areas, bounds, domain, range,
         // let min_in_ci = null;
         // let max_in_ci = null;
         let [min_in_ci, max_in_ci, tail_count, tail_total] = CI;
-        let [large_min_in_ci, large_max_in_ci, large_tail_count, large_tail_total] = largeCI;
+        let [large_min_in_ci, large_max_in_ci, large_tail_count, large_tail_total] = largeCI || [0, 0, 0, 1];
         for(let p = 0; p < tail_total; p++){
             let item = distribution_points.childNodes[0];
             let data_stat = parseFloat(item.getAttribute('data-stat'));
@@ -416,7 +416,7 @@ function createDistribution(distribution, options, areas, bounds, domain, range,
             //     if(max_in_ci == null || data_stat > max_in_ci) max_in_ci = data_stat;
             // }
         }
-        for(let ci_info of [[CI, 'ci'], [largeCI, 'large-ci']]){
+        for(let ci_info of [[CI, 'ci'], [largeCI || [0, 0, 0, 1], 'large-ci']]){
             let [min_in_ci, max_in_ci, tail_count, tail_total] = ci_info[0];
             let ci_name = ci_info[1];
             let ci_container = document.createElementNS("http://www.w3.org/2000/svg", 'g');
