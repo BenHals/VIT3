@@ -99,31 +99,56 @@ function createProportionBar(data, factor_bounds, bounds, domain, range, num_fac
     for(let b = 0; b < rects.length; b++){
         const rect = rects[b];
         let rect_svg = document.createElementNS("http://www.w3.org/2000/svg", 'rect');
+        let rect_color = d3.hsl(config.groupColorsList[b]);
+        rect_color.l = 0.4;
         rect_svg.setAttribute('x', rect.left);
         rect_svg.setAttribute('y', factor_bounds.top);
         rect_svg.setAttribute('width', rect.right - rect.left);
         rect_svg.setAttribute('height', factor_bounds.bottom - factor_bounds.top);
-        rect_svg.style.fill = config.groupColorsList[b];
+        rect_svg.style.fill = rect_color;
         rect_svg.setAttribute('class', 'pop-rect');
         rect_svg.id = `pop_id_r${b}`;
         group.insertAdjacentElement('beforeEnd', rect_svg);
         
+        let text_color = d3.hsl(config.groupColorsList[b]);
+        text_color.l = 0.9;
+        let text_opacity = 0.75;
         let rect_label = document.createElementNS("http://www.w3.org/2000/svg", 'text');
-        rect_label.setAttribute('x', rect.left);
-        rect_label.setAttribute('y', factor_bounds.top);
-        rect_label.style.alignmentBaseline = 'hanging';
+        rect_label.setAttribute('x', rect.left + Math.min((rect.right - rect.left)*0.1, (factor_bounds.bottom - factor_bounds.top)*0.1, 5));
+        rect_label.setAttribute('y', factor_bounds.bottom - (factor_bounds.bottom - factor_bounds.top)/2);
+        rect_label.style.alignmentBaseline = 'central';
         rect_label.style.textAnchor = 'start';
         // rect_label.style.stroke = d3.hsl(config.groupColorsList[b]).brighter();
         // rect_label.style.fill = d3.hsl(config.groupColorsList[b]).brighter();
-        rect_label.style.fill = 'white';
-        rect_label.style.stroke = 'transparent';
+        rect_label.style.fill = text_color;
+        rect_label.style.stroke = rect_color;
+        rect_label.style.fillOpacity = text_opacity;
 
         // rect_label.style.stroke = d3.hsl(config.groupColorsList[b]).brighter();
-        rect_label.style.fontSize = Math.min((rect.right - rect.left), (factor_bounds.bottom - factor_bounds.top) * 1.5, vmin(6));
+        rect_label.style.fontSize = Math.min((rect.right - rect.left), (factor_bounds.bottom - factor_bounds.top) * 1.2, vmin(6));
         rect_label.textContent = rect.label;
         rect_label.setAttribute('class', 'pop-rect-label');
         rect_label.id = `pop_id_r${b}`;
         group.insertAdjacentElement('beforeEnd', rect_label);
+
+        let rect_num = document.createElementNS("http://www.w3.org/2000/svg", 'text');
+        rect_num.setAttribute('x', rect.left + (rect.right - rect.left)/2);
+        rect_num.setAttribute('y', factor_bounds.top + (factor_bounds.bottom - factor_bounds.top)/2);
+        rect_num.style.alignmentBaseline = 'central';
+        rect_num.style.textAnchor = 'middle';
+        // rect_num.style.stroke = d3.hsl(config.groupColorsList[b]).brighter();
+        
+        rect_num.style.fill = text_color;
+        // rect_num.style.fill = 'white';
+        rect_num.style.stroke = rect_color;
+        rect_num.style.fillOpacity = text_opacity;
+
+        // rect_num.style.stroke = d3.hsl(config.groupColorsList[b]).brighter();
+        rect_num.style.fontSize = Math.min((rect.right - rect.left), (factor_bounds.bottom - factor_bounds.top)* 1.2, vmin(15));
+        rect_num.textContent = rect.num_items;
+        rect_num.setAttribute('class', 'pop-rect-label');
+        rect_num.id = `pop_id_r${b}`;
+        group.insertAdjacentElement('beforeEnd', rect_num);
 
         let rect_group = document.createElementNS("http://www.w3.org/2000/svg", 'g');
         rect_group.id = rect.label;
@@ -165,8 +190,8 @@ function createProportionBar(data, factor_bounds, bounds, domain, range, num_fac
             datapoint_svg.setAttribute('cx', x);
             datapoint_svg.setAttribute('cy', y);
             datapoint_svg.setAttribute('r', radius);
-            datapoint_svg.style.fill = d3.hsl(config.groupColorsList[b]).brighter();
-            datapoint_svg.style.stroke = d3.hsl(config.groupColorsList[b]).darker();
+            datapoint_svg.style.fill = rect_color.brighter();
+            datapoint_svg.style.stroke = rect_color.darker();
             datapoint_svg.setAttribute('class', 'datapoint');
             datapoint_svg.id = `pop_id${i}`;
             rect_group.insertAdjacentElement('beforeEnd', datapoint_svg);
@@ -176,7 +201,8 @@ function createProportionBar(data, factor_bounds, bounds, domain, range, num_fac
                 r = 0;
             }
         }
-        group.insertAdjacentElement('beforeEnd', rect_group);
+        // group.insertAdjacentElement('afterbegin', rect_group);
+        group.insertBefore(rect_group, rect_label);
 
     
     }
