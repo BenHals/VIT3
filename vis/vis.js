@@ -189,7 +189,14 @@ const vis = {
         document.querySelector('#dynamicSVG').style.opacity = 1;
         document.querySelector('#popSVG').style.opacity = 1;
     },
-
+    setAnimation: function(animation){
+        this.removeCurrentAnimation();
+        this.animation = animation;
+    },
+    removeCurrentAnimation: function(){
+        if(!this.animation) return;
+        this.animation.remove();
+    },
     initAnimation: function(reps, include_distribution, track, inherit_speed = false){
         this.pause();
         let self = this;
@@ -202,21 +209,12 @@ const vis = {
         }
         if(reps <= 20){
             this.reps_left = reps - 1;
-            let speed = inherit_speed ? this.speed : (1 + 0.75*(reps - 1)) * (1 + 1 * include_distribution);
+            let speed = inherit_speed ? this.speed : (1 + 0.25*(reps - 1)) * (1 + 0.5 * include_distribution);
             this.speed = speed;
             this.include_distribution = include_distribution;
-            let animation = {
-                total_duration: 1000 / speed,
-                start: function(){
-                    self.initSample(self.current_sample);
-                    self.current_sample++;
-                    // self.current_sample = (self.current_sample + 1)%(self.samples.length);
-                },
-                percentUpdate: function(p){
-                    return p >= 1;
-                }
-            }
-            this.animation = animation;
+            let animation = makeBaseAnimation(vis, speed, parseInt(reps));
+            
+            this.setAnimation(animation);
             this.animation.start();
         }else{
             this.reps_left = 0;
@@ -273,9 +271,12 @@ const vis = {
                     self.current_sample = frame_sample_index;
                     this.last_shown = self.current_sample;
                     return p >= 1;
+                },
+                remove: function(){
+
                 }
             }
-            this.animation = animation;
+            this.setAnimation(animation);
             this.animation.start();
         }
         // let animation = new Animation(`${reps}:${include_distribution}`);
@@ -331,7 +332,7 @@ const vis = {
         // }
         // this.last_animation_type = "ci";
         let animation = makeCIAnimation(this, speed, tail_only, large);
-        this.animation = animation;
+        this.setAnimation(animation);
         this.animation.start();
         this.paused = false;
         ac_unpause();
