@@ -26,8 +26,10 @@ function makeBaseAnimation(vis, speed, reps){
             let distribution_container = document.querySelector(`#distribution-${this.sample_id_num}`);
             this.distributions = distribution_container.querySelectorAll('*');
             for(dist of this.distributions){
-                dist.style['fill-opacity'] = 0;
-                dist.style['stroke-opacity'] = 0;
+                // dist.style['fill-opacity'] = 0;
+                // dist.style['stroke-opacity'] = 0;
+                dist.setAttribute('data-r', dist.getAttribute('r'));
+                dist.setAttribute('r', 0);
             }
             this.animation_controller = anime.timeline({
                 // duration: this.total_duration,
@@ -136,37 +138,53 @@ function makeBaseAnimation(vis, speed, reps){
             if(this.props1.length > 0){
                 this.animation_controller.add({
                     targets: [this.props1],
-                    'fill-opacity': (el) => {return [reps <= 10 ? 0 : 1, anime.get(el, 'fill-opacity') || 1]},
-                    'stroke-opacity': (el) => {return [reps <= 10 ? 0 : 1, anime.get(el, 'stroke-opacity') || 1]},
-                    duration: durations.fadein_duration,  
+                    'fill-opacity': (el) => {return [reps <= 10 ? 0 : anime.get(el, 'fill-opacity') || 1, anime.get(el, 'fill-opacity') || 1]},
+                    'stroke-opacity': (el) => {return [reps <= 10 ? 0 : anime.get(el, 'stroke-opacity') || 1, anime.get(el, 'stroke-opacity') || 1]},
+                    duration: durations.fadein_duration,
+                    easing: 'easeInOutQuad',
                 });
             }
             if(this.props2.length > 0){
                 this.animation_controller.add({
                     targets: [this.props2],
-                    'fill-opacity': (el) => {return [reps <= 10 ? 0 : 1, anime.get(el, 'fill-opacity') || 1]},
-                    'stroke-opacity': (el) => {return [reps <= 10 ? 0 : 1, anime.get(el, 'stroke-opacity') || 1]},
+                    'fill-opacity': (el) => {return [reps <= 10 ? 0 : anime.get(el, 'fill-opacity') || 1, anime.get(el, 'fill-opacity') || 1]},
+                    'stroke-opacity': (el) => {return [reps <= 10 ? 0 : anime.get(el, 'stroke-opacity') || 1, anime.get(el, 'stroke-opacity') || 1]},
                     duration: durations.fadein_duration,  
+                    easing: 'easeInOutQuad',
                 });
             }
+            // this.animation_controller.add({
+            //     targets: [this.stats],
+            //     'fill-opacity': (el) => {return [reps <= 10 ? 0 : anime.get(el, 'fill-opacity') || 1, anime.get(el, 'fill-opacity') || 1]},
+            //     'stroke-opacity': (el) => {return [reps <= 10 ? 0 : anime.get(el, 'stroke-opacity') || 1, anime.get(el, 'stroke-opacity') || 1]},
+            //     duration: durations.fadein_duration,  
+            //     easing: 'easeInOutQuad',
+            // });
             this.animation_controller.add({
                 targets: [this.stats],
-                'fill-opacity': (el) => {return [reps <= 10 ? 0 : 1, anime.get(el, 'fill-opacity') || 1]},
-                'stroke-opacity': (el) => {return [reps <= 10 ? 0 : 1, anime.get(el, 'stroke-opacity') || 1]},
+                'fill-opacity': (el) => {return [reps <= 10 ? 0 : anime.get(el, 'fill-opacity') || 1, anime.get(el, 'fill-opacity') || 1]},
+                // 'stroke-opacity': (el) => {return [reps <= 10 ? 0 : anime.get(el, 'stroke-opacity') || 1, anime.get(el, 'stroke-opacity') || 1]},
+                'stroke-width': (el) => {return [reps <= 10 ? 0 : anime.get(el, 'stroke-width') || 4, anime.get(el, 'stroke-width') || 4]},
                 duration: durations.fadein_duration,  
+                easing: 'easeOutElastic(1, 0.3)',
             });
             this.animation_controller.add({
                 targets: [this.analysis],
-                'fill-opacity': (el) => {return [reps <= 10 ? 0 : 1, anime.get(el, 'fill-opacity') || 1]},
-                'stroke-opacity': (el) => {return [reps <= 10 ? 0 : 1, anime.get(el, 'stroke-opacity') || 1]},
+                'fill-opacity': (el) => {return [reps <= 10 ? 0 : anime.get(el, 'fill-opacity') || 1, anime.get(el, 'fill-opacity') || 1]},
+                // 'stroke-opacity': (el) => {return [reps <= 10 ? 0 : anime.get(el, 'stroke-opacity') || 1, anime.get(el, 'stroke-opacity') || 1]},
+                'stroke-width': (el) => {return [reps <= 10 ? 0 : anime.get(el, 'stroke-width') || 4, anime.get(el, 'stroke-width') || 4]},
                 duration: durations.fadein_duration,  
+                easing: 'easeOutElastic(1, 0.3)',
             });
             if(vis.include_distribution){
                 this.animation_controller.add({
                     targets: [this.distributions],
-                    'fill-opacity': [0, 1],
-                    'stroke-opacity': [0, 1],
+                    // 'fill-opacity': [0, 1],
+                    // 'stroke-opacity': [0, 1],
+                    r: (el) => [0, anime.get(el, 'data-r')],
+                    'fill': (el) => [d3.color(anime.get(el, 'fill')).toString(), d3.color('red').toString()],
                     duration: durations.fadein_duration,  
+                    easing: 'easeOutElastic(1, 0.3)'
                 });
             }
             this.animation_controller.add({
@@ -181,8 +199,9 @@ function makeBaseAnimation(vis, speed, reps){
             this.animation_controller.seek(0);
             if(this.include_distribution){
                 for(dist of this.distributions){
-                    dist.style['fill-opacity'] = 1;
-                    dist.style['stroke-opacity'] = 1;
+                    // dist.style['fill-opacity'] = 1;
+                    // dist.style['stroke-opacity'] = 1;
+                    dist.setAttribute('r', dist.getAttribute('data-r'));
                 }
             }
         }
