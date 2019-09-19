@@ -197,7 +197,7 @@ const vis = {
         if(!this.animation) return;
         this.animation.remove();
     },
-    initAnimation: function(reps, include_distribution, track, inherit_speed = false){
+    initAnimation: function(reps, include_distribution, track, repeated = false){
         this.pause();
         let self = this;
         if(this.current_sample >= this.samples.length - 1){
@@ -208,17 +208,19 @@ const vis = {
             this.hideDistribution();
         }
         if(reps <= 20){
-            this.reps_left = reps - 1;
-            let speed = inherit_speed ? this.speed : (1 + 0.25*(reps - 1)) * (1 + 0.5 * include_distribution);
+            if(!repeated) this.animation_reps = reps;
+            this.reps_left = repeated ? this.reps_left - 1 : reps - 1;
+            // let speed = repeated ? this.speed : (1 + 0.25*(reps - 1)) * (1 + 0.5 * include_distribution);
+            let speed = repeated ? this.speed : linearScale(reps, [1, 20], [1, 10]) * (1 + 0.5 * include_distribution);
             this.speed = speed;
             this.include_distribution = include_distribution;
-            let animation = makeBaseAnimation(vis, speed, parseInt(reps));
+            let animation = makeBaseAnimation(vis, speed, parseInt(this.animation_reps));
             
             this.setAnimation(animation);
             this.animation.start();
         }else{
             this.reps_left = 0;
-            let speed = inherit_speed ? this.speed : 1 * (1 + 1 * include_distribution);
+            let speed = repeated ? this.speed : 1 * (1 + 1 * include_distribution);
             this.speed = speed;
             this.include_distribution = include_distribution;
             let num_samples_to_show = this.samples.length - this.current_sample - 2;

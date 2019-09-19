@@ -112,6 +112,7 @@ function createProportionBar(data, all_data, factor_bounds, bounds, domain, rang
         rect_svg.setAttribute('height', factor_bounds.bottom - factor_bounds.top);
         rect_svg.style.fill = rect_color;
         rect_svg.setAttribute('class', 'pop-rect');
+        rect_svg.classList.add('prop2');
         rect_svg.id = `pop_id_r${b}`;
         group.insertAdjacentElement('beforeEnd', rect_svg);
         
@@ -157,6 +158,7 @@ function createProportionBar(data, all_data, factor_bounds, bounds, domain, rang
         rect_num.style.fontSize = Math.min((rect.right - rect.left), (factor_bounds.bottom - factor_bounds.top)* 1.2, vmin(15));
         rect_num.textContent = rect.num_items;
         rect_num.setAttribute('class', 'pop-rect-label');
+        rect_num.classList.add('prop1');
         rect_num.id = `pop_id_r${b}`;
         group.insertAdjacentElement('beforeEnd', rect_num);
 
@@ -199,8 +201,10 @@ function createProportionBar(data, all_data, factor_bounds, bounds, domain, rang
             let datapoint_svg = document.createElementNS("http://www.w3.org/2000/svg", 'circle');
             datapoint_svg.setAttribute('cx', x);
             datapoint_svg.setAttribute('cy', y);
+            datapoint_svg.setAttribute('data-cy', y);
             datapoint_svg.setAttribute('r', radius);
             datapoint_svg.style.fill = rect_color.brighter();
+            datapoint_svg.setAttribute('data-fill', datapoint_svg.style.fill);
             datapoint_svg.style.stroke = rect_color.darker();
             datapoint_svg.setAttribute('class', 'datapoint');
             datapoint_svg.setAttribute('data-did', (b == 0 ? focus_data : other_data)[i].id);
@@ -244,8 +248,10 @@ function createDatapointHeap(data, ids, factor_bounds, bounds, domain, range, nu
         datapoint_svg.setAttribute('cx', linearScale(dp_center, domain, range));
         seen_buckets[bucket_vals[i]] ? seen_buckets[bucket_vals[i]]++ : seen_buckets[bucket_vals[i]] = 1;
         datapoint_svg.setAttribute('cy', factor_bounds.bottom  - seen_buckets[bucket_vals[i]] * y_space_per_element);
+        datapoint_svg.setAttribute('data-cy', factor_bounds.bottom  - seen_buckets[bucket_vals[i]] * y_space_per_element);
         datapoint_svg.setAttribute('r', bounds.radius);
         datapoint_svg.style.fill = num_factors == 1 ? 'grey' : config.groupColorsList[factor_id];
+        datapoint_svg.setAttribute('data-fill', datapoint_svg.style.fill);
         datapoint_svg.setAttribute('class', dp_class);
         datapoint_svg.setAttribute('data-stat', dp_center);
         datapoint_svg.setAttribute('data-did', id);
