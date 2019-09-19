@@ -30,6 +30,10 @@ function makeBaseAnimation(vis, speed, reps){
                 // dist.style['stroke-opacity'] = 0;
                 dist.setAttribute('data-r', dist.getAttribute('r'));
                 dist.setAttribute('r', 0);
+                dist.setAttribute('data-x1', dist.getAttribute('x1'));
+                dist.setAttribute('x1', parseFloat(dist.getAttribute('x1')) + (parseFloat(dist.getAttribute('x2')) - parseFloat(dist.getAttribute('x1')))/2);
+                dist.setAttribute('data-x2', dist.getAttribute('x2'));
+                dist.setAttribute('x2', parseFloat(dist.getAttribute('data-x1')) + (parseFloat(dist.getAttribute('x2')) - parseFloat(dist.getAttribute('data-x1')))/2);
             }
             this.animation_controller = anime.timeline({
                 // duration: this.total_duration,
@@ -182,6 +186,8 @@ function makeBaseAnimation(vis, speed, reps){
                     // 'fill-opacity': [0, 1],
                     // 'stroke-opacity': [0, 1],
                     r: (el) => [0, anime.get(el, 'data-r')],
+                    'x1': (el) => [anime.get(el, 'x1'), anime.get(el, 'data-x1')],
+                    'x2': (el) => [anime.get(el, 'x2'), anime.get(el, 'data-x2')],
                     'fill': (el) => [d3.color(anime.get(el, 'fill')).toString(), d3.color('red').toString()],
                     duration: durations.fadein_duration,  
                     easing: 'easeOutElastic(1, 0.3)'
@@ -202,6 +208,8 @@ function makeBaseAnimation(vis, speed, reps){
                     // dist.style['fill-opacity'] = 1;
                     // dist.style['stroke-opacity'] = 1;
                     dist.setAttribute('r', dist.getAttribute('data-r'));
+                    dist.setAttribute('x1', dist.getAttribute('data-x1'));
+                    dist.setAttribute('x2', dist.getAttribute('data-x2'));
                 }
             }
         }

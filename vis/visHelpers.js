@@ -364,7 +364,7 @@ function createAnalysisMarkersFromDataset(dataset, options, areas, bounds, domai
         }
 
     }
-    if((is_population ? options.popAnalysis : options.Analysis) == "Confidence Interval"){
+    if(!is_population && (is_population ? options.popAnalysis : options.Analysis) == "Confidence Interval"){
         const factor_stat = dataset.statistics.overall.analysis[options.Statistic][is_population ? options.popAnalysis : options.Analysis];
         const factor_stat_1_screen = linearScale(factor_stat[0], domain, range);
         const factor_stat_2_screen = linearScale(factor_stat[2], domain, range);
@@ -595,8 +595,8 @@ function createDistribution(distribution, options, areas, bounds, domain, range,
             distrubution_group.id = `distribution-${d}`;
             distribution_container.insertAdjacentElement('beforeend', distrubution_group);
             
-            let bottom = factor_bounds.bottom - (y_space_per_element * (d % model.selected_module.sample_reset_index || 10000))
-            let top = factor_bounds.bottom - (y_space_per_element * ((d % model.selected_module.sample_reset_index || 10000) + 1));
+            let bottom = factor_bounds.bottom - (y_space_per_element * (d % (model.selected_module.sample_reset_index || 10000)))
+            let top = factor_bounds.bottom - (y_space_per_element * ((d % (model.selected_module.sample_reset_index || 10000)) + 1));
             let center = top + (bottom - top);
             let distribution_element = document.createElementNS("http://www.w3.org/2000/svg", 'line');
             distribution_element.id = `sample-id${d}`;
