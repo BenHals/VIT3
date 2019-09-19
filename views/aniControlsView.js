@@ -399,6 +399,22 @@ document.addEventListener('click', function(e){
 //     $('#trackpints').prop('checked', false);
 //   }
 // })
+document.addEventListener('pointerdown', function(e){
+  if(!e.target.matches('#visAnimProgress')) return;
+  if(!touch_event_started){
+    touch_event_state = controller.paused;
+    controller.pause();
+    touch_event_started = true;
+  }
+});
+document.addEventListener('touchstart', function(e){
+  if(!e.target.matches('#visAnimProgress')) return;
+  if(!touch_event_started){
+    touch_event_state = controller.paused;
+    controller.pause();
+    touch_event_started = true;
+  }
+});
 document.addEventListener('input', function(e){
   if(!e.target.matches('#visAnimProgress')) return;
   let event_time = window.performance.now();
@@ -408,17 +424,17 @@ document.addEventListener('input', function(e){
     // range_timout_event = setTimeout(controller.visAnimUserInput(parseFloat(document.querySelector('#visAnimProgress').value)), 500);
   }else{
     // window.clearTimeout(range_timout_event);
-    range_last_event = event_time;
-    if(!touch_event_started){
-      touch_event_state = controller.paused;
-      controller.pause();
-      touch_event_started = true;
-    }
-    
+    range_last_event = event_time;    
     requestAnimationFrame(() => {controller.visAnimUserInput(parseFloat(document.querySelector('#visAnimProgress').value))});
   }
 });
-document.addEventListener('click', function(e){
+document.addEventListener('pointerup', function(e){
+  if(!e.target.matches('#visAnimProgress')) return;
+  controller.visAnimUserInput(parseFloat(document.querySelector('#visAnimProgress').value));
+  if(touch_event_state == false) controller.unpause();
+  touch_event_started = false;
+});
+document.addEventListener('touchend', function(e){
   if(!e.target.matches('#visAnimProgress')) return;
   controller.visAnimUserInput(parseFloat(document.querySelector('#visAnimProgress').value));
   if(touch_event_state == false) controller.unpause();
