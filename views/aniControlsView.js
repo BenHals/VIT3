@@ -2,6 +2,8 @@ let range_last_event = 0;
 let range_timout_event = null;
 let distribution_focus = false;
 let loading_done = false;
+let touch_event_state = null;
+let touch_event_started = null;
 function generatevisualisationViewHTML(module){
   if (document.querySelector('body').clientWidth < 768) {
     // do something for small screens
@@ -407,12 +409,20 @@ document.addEventListener('input', function(e){
   }else{
     // window.clearTimeout(range_timout_event);
     range_last_event = event_time;
+    if(!touch_event_started){
+      touch_event_state = controller.paused;
+      controller.pause();
+      touch_event_started = true;
+    }
+    
     requestAnimationFrame(() => {controller.visAnimUserInput(parseFloat(document.querySelector('#visAnimProgress').value))});
   }
 });
 document.addEventListener('click', function(e){
   if(!e.target.matches('#visAnimProgress')) return;
   controller.visAnimUserInput(parseFloat(document.querySelector('#visAnimProgress').value));
+  if(touch_event_state == false) controller.unpause();
+  touch_event_started = false;
 });
 // $(document).on('input', '#visAnimProgress', function(e){
 //   controller.visAnimUserInput(parseFloat($('#visAnimProgress').val()));
