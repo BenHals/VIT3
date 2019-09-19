@@ -3,12 +3,16 @@ function makeBaseAnimation(vis, speed, reps){
     let durations = {
         "fadein_duration": 4000 / speed,
         "drop_duration": 4000 / speed,
+        "distdrop_duration": 6000 / speed,
         "delay": 2000 / speed,
     }
     let animation = {
         total_duration: Object.keys(durations).map((k) => durations[k]).reduce((a, b) => a + b, 0),
         start: function(){
             let self = this;
+            this.speed = speed;
+            this.reps = reps;
+            this.vis_options = vis.options;
             this.include_distribution = vis.include_distribution;
             this.sample_id_num = vis.current_sample; 
             this.sample_id = `sample_${vis.current_sample}`;
@@ -42,160 +46,11 @@ function makeBaseAnimation(vis, speed, reps){
                 easing: this.total_duration < 500 ? 'linear' : `easeOutElastic(${1}, ${linearScale(reps, [1, 5], [0.6, 1.2])})`
                 
             });
-            this.animation_controller.add({
-                targets: this.matched_population_elements,
-                'fill-opacity': (el) => {return [anime.get(el, 'fill-opacity'), 1]},
-                'stroke-opacity': (el) => {return [anime.get(el, 'stroke-opacity'), 1]},
-                fill: function(el, i) {
-                    let original_color_str = anime.get(el, 'fill');
-                    let new_color = null;
-                    if(d3.hsl(original_color_str).s < 0.2){
-                        new_color_str = d3.color('red');
-                    }else{
-                        new_color_str = d3.color(original_color_str).brighter().brighter();
-                    }
-                    return [d3.color(original_color_str).toString(), new_color_str.toString()]
-                },
-                delay: anime.stagger(50),
-                duration: durations.fadein_duration,
-            });
-            if(vis.module.name == "Randomisation Variation" || vis.module.name == "Randomisation Test"){
-                this.animation_controller.add({
-                    targets: this.sample_elements,
-                    'fill-opacity': [0, 1],
-                    'stroke-opacity': [0, 1],
-                    'fill': function(el, i){
-                        let new_color = d3.color(anime.get(self.matched_population_elements.find((pel) => pel.dataset.did == el.dataset.did), 'fill'));
-                        return [reps <= 10 ? new_color.toString() : d3.color('white'), reps <= 10 ? new_color.toString() : d3.color('white')]
-                    },
-                    duration: reps <= 10 ? durations.drop_duration : 1,
-    
-                }, `-=${durations.fadein_duration}`);
-                this.animation_controller.add({
-                    targets: this.sample_elements,
-                    cy: function(el, i){
-                        return [(reps <= 10 ? self.matched_population_elements.find((pel) => pel.dataset.did == el.dataset.did).getAttribute('cy') : vis.areas['sec1display'].split(2, 1)[1]), vis.areas['sec1display'].split(2, 1)[1]];
-                    },
-                    cx: function(el, i){
-                        return [(reps <= 10 ? self.matched_population_elements.find((pel) => pel.dataset.did == el.dataset.did).getAttribute('cx') : el.getAttribute('cx')), el.getAttribute('cx')];
-                    },
-                    r: function(el, i){
-                        return [(reps <= 10 ? self.matched_population_elements.find((pel) => pel.dataset.did == el.dataset.did).getAttribute('r') : el.getAttribute('r')), el.getAttribute('r')];
-                    },
-                    delay: reps <= 10 ? anime.stagger(50) : 0,
-                    duration: reps <= 10 ? durations.drop_duration : 1,  
-                });
-                this.animation_controller.add({
-                    targets: this.sample_elements,
-                    'fill': function(el, i){
-                        let old_color = d3.color(anime.get(self.matched_population_elements.find((pel) => pel.dataset.did == el.dataset.did), 'fill'));
-                        let new_color = d3.color('white');
-                        return [reps <= 10 ? old_color.toString() : new_color.toString(), new_color.toString()]
-                    },
-                    duration: reps <= 10 ? durations.drop_duration : 1,
-                });
-                this.animation_controller.add({
-                    targets: this.sample_elements,
-                    cy: function(el, i){
-                        return [(vis.areas['sec1display'].split(2, 1)[1]), el.getAttribute('data-cy')];
-                    },
-                    'fill': function(el, i){
-                        let new_color = d3.color(anime.get(el, 'data-fill'));
-                        return [d3.color('white'), new_color.toString()]
-                    },
-                    delay: reps <= 10 ? anime.stagger(50) : 0,
-                    duration: durations.drop_duration,  
-                });
-            }else{
-                this.animation_controller.add({
-                    targets: this.sample_elements,
-                    'fill-opacity': [0, 1],
-                    'stroke-opacity': [0, 1],
-                    'fill': function(el, i){
-                        let original_color_str = anime.get(el, 'fill');
-                        let new_color = null;
-                        if(original_color_str == 'grey'){
-                            new_color_str = d3.color('red');
-                        }else{
-                            new_color_str = d3.color(original_color_str).brighter().brighter();
-                        }
-                        return [new_color_str.toString(), new_color_str.toString()]
-                    },
-                    duration: reps <= 10 ? durations.drop_duration : 1,
-    
-                }, `-=${durations.fadein_duration}`);
-                this.animation_controller.add({
-                    targets: this.sample_elements,
-                    cy: function(el, i){
-                        return [(reps <= 10 ? self.matched_population_elements.find((pel) => pel.dataset.did == el.dataset.did).getAttribute('cy') : el.getAttribute('cy')), el.getAttribute('cy')];
-                    },
-                    cx: function(el, i){
-                        return [(reps <= 10 ? self.matched_population_elements.find((pel) => pel.dataset.did == el.dataset.did).getAttribute('cx') : el.getAttribute('cx')), el.getAttribute('cx')];
-                    },
-                    r: function(el, i){
-                        return [(reps <= 10 ? self.matched_population_elements.find((pel) => pel.dataset.did == el.dataset.did).getAttribute('r') : el.getAttribute('r')), el.getAttribute('r')];
-                    },
-                    delay: reps <= 10 ? anime.stagger(50) : 0,
-                    duration: durations.drop_duration,  
-                });
-            }
-            if(this.props1.length > 0){
-                this.animation_controller.add({
-                    targets: [this.props1],
-                    'fill-opacity': (el) => {return [reps <= 10 ? 0 : anime.get(el, 'fill-opacity') || 1, anime.get(el, 'fill-opacity') || 1]},
-                    'stroke-opacity': (el) => {return [reps <= 10 ? 0 : anime.get(el, 'stroke-opacity') || 1, anime.get(el, 'stroke-opacity') || 1]},
-                    duration: durations.fadein_duration,
-                    easing: 'easeInOutQuad',
-                });
-            }
-            if(this.props2.length > 0){
-                this.animation_controller.add({
-                    targets: [this.props2],
-                    'fill-opacity': (el) => {return [reps <= 10 ? 0 : anime.get(el, 'fill-opacity') || 1, anime.get(el, 'fill-opacity') || 1]},
-                    'stroke-opacity': (el) => {return [reps <= 10 ? 0 : anime.get(el, 'stroke-opacity') || 1, anime.get(el, 'stroke-opacity') || 1]},
-                    duration: durations.fadein_duration,  
-                    easing: 'easeInOutQuad',
-                });
-            }
-            // this.animation_controller.add({
-            //     targets: [this.stats],
-            //     'fill-opacity': (el) => {return [reps <= 10 ? 0 : anime.get(el, 'fill-opacity') || 1, anime.get(el, 'fill-opacity') || 1]},
-            //     'stroke-opacity': (el) => {return [reps <= 10 ? 0 : anime.get(el, 'stroke-opacity') || 1, anime.get(el, 'stroke-opacity') || 1]},
-            //     duration: durations.fadein_duration,  
-            //     easing: 'easeInOutQuad',
-            // });
-            this.animation_controller.add({
-                targets: [this.stats],
-                'fill-opacity': (el) => {return [reps <= 10 ? 0 : anime.get(el, 'fill-opacity') || 1, anime.get(el, 'fill-opacity') || 1]},
-                // 'stroke-opacity': (el) => {return [reps <= 10 ? 0 : anime.get(el, 'stroke-opacity') || 1, anime.get(el, 'stroke-opacity') || 1]},
-                'stroke-width': (el) => {return [reps <= 10 ? 0 : anime.get(el, 'stroke-width') || 4, anime.get(el, 'stroke-width') || 4]},
-                duration: durations.fadein_duration,  
-                easing: 'easeOutElastic(1, 0.3)',
-            });
-            this.animation_controller.add({
-                targets: [this.analysis],
-                'fill-opacity': (el) => {return [reps <= 10 ? 0 : anime.get(el, 'fill-opacity') || 1, anime.get(el, 'fill-opacity') || 1]},
-                // 'stroke-opacity': (el) => {return [reps <= 10 ? 0 : anime.get(el, 'stroke-opacity') || 1, anime.get(el, 'stroke-opacity') || 1]},
-                'stroke-width': (el) => {return [reps <= 10 ? 0 : anime.get(el, 'stroke-width') || 4, anime.get(el, 'stroke-width') || 4]},
-                duration: durations.fadein_duration,  
-                easing: 'easeOutElastic(1, 0.3)',
-            });
-            if(vis.include_distribution){
-                this.animation_controller.add({
-                    targets: [this.distributions],
-                    // 'fill-opacity': [0, 1],
-                    // 'stroke-opacity': [0, 1],
-                    r: (el) => [0, anime.get(el, 'data-r')],
-                    'x1': (el) => [anime.get(el, 'x1'), anime.get(el, 'data-x1')],
-                    'x2': (el) => [anime.get(el, 'x2'), anime.get(el, 'data-x2')],
-                    'fill': (el) => [d3.color(anime.get(el, 'fill')).toString(), d3.color('red').toString()],
-                    duration: durations.fadein_duration,  
-                    easing: 'easeOutElastic(1, 0.3)'
-                });
-            }
-            this.animation_controller.add({
-                duration: durations.delay,
-            });
+            addFadeInAnimation(this, durations);
+            addSampleDropAnimation(this, durations);
+            addSampleExtrasAnimation(this, durations);
+            addDistDropAnimation(this, durations);
+
         },
         percentUpdate: function(p){
             this.animation_controller.seek(p * this.animation_controller.duration);
@@ -216,6 +71,268 @@ function makeBaseAnimation(vis, speed, reps){
     }
     this.total_duration = animation.duration;
     return animation;
+}
+
+function addFadeInAnimation(animation, durations){
+    animation.animation_controller.add({
+        targets: animation.matched_population_elements,
+        'fill-opacity': (el) => {return [anime.get(el, 'fill-opacity'), 1]},
+        'stroke-opacity': (el) => {return [anime.get(el, 'stroke-opacity'), 1]},
+        fill: function(el, i) {
+            let original_color_str = anime.get(el, 'fill');
+            let new_color = null;
+            if(d3.hsl(original_color_str).s < 0.2){
+                new_color_str = d3.color('red');
+            }else{
+                new_color_str = d3.color(original_color_str).brighter().brighter();
+            }
+            return [d3.color(original_color_str).toString(), new_color_str.toString()]
+        },
+        delay: anime.stagger(50),
+        duration: durations.fadein_duration,
+    });
+}
+function addDistDropAnimation(animation, durations){
+    if(vis.include_distribution){
+        if(animation.vis_options.Analysis == "Point Value"){
+            let main_stat_mark = document.querySelector(`#dynamicSVG #factor_0_mainstatmark`);
+            let distribution_element = animation.distributions[0];
+            animation.animation_controller.add({
+                targets: main_stat_mark,
+                'y1': (el) => [anime.get(el, 'y1'), anime.get(distribution_element, 'cy')],
+                'y2': (el) => [anime.get(el, 'y2'), anime.get(distribution_element, 'cy')],
+                'stroke': [
+                    {value: (el) => [d3.color(anime.get(el, 'fill')).toString(), d3.color('red').toString()] },
+                    {value: d3.color('red').toString() },
+                    {value: d3.color('red').toString() },
+                    {value: d3.color('red').toString() },
+                ],
+                duration: durations.distdrop_duration,  
+                easing: 'easeInQuint'
+            });
+        }else if(animation.vis_options.Analysis == "Difference"){
+            let main_stat_arrow = document.querySelectorAll(`#${animation.sample_id}_analysis line`);
+            let main_stat_mark = document.querySelector(`#${animation.sample_id}_analysis #arrow_main_line`);
+            let arrow_y = main_stat_mark.getAttribute('y1');
+            let distribution_element = animation.distributions[0];
+            let dist_y = distribution_element.getAttribute('cy');
+            let y_delta = parseFloat(dist_y) - parseFloat(arrow_y);
+            let x_delta = parseFloat(distribution_element.getAttribute('cx')) - parseFloat(main_stat_mark.getAttribute('x2'));
+
+            animation.animation_controller.add({
+                targets: main_stat_arrow,
+                'y1': (el) => [anime.get(el, 'y1'), parseFloat(anime.get(el, 'y1')) + y_delta],
+                'y2': (el) => [anime.get(el, 'y2'), parseFloat(anime.get(el, 'y2')) + y_delta],
+                'x1': (el) => [anime.get(el, 'x1'), parseFloat(anime.get(el, 'x1')) + x_delta],
+                'x2': (el) => [anime.get(el, 'x2'), parseFloat(anime.get(el, 'x2')) + x_delta],
+                'stroke': [
+                    {value: (el) => [d3.color(anime.get(el, 'fill')).toString(), d3.color('red').toString()] },
+                    {value: d3.color('red').toString() },
+                    {value: d3.color('red').toString() },
+                    {value: d3.color('red').toString() },
+                ],
+                duration: durations.distdrop_duration,  
+                easing: 'easeInQuint'
+            });
+        }else if(animation.vis_options.Analysis == "Average Deviation" || animation.vis_options.Analysis == "F Stat"){
+            let main_stat_mark = document.querySelectorAll(`#${animation.sample_id}_analysis .arrow:not(.avg-dev)`);
+            let distribution_element = animation.distributions[0];
+            let avg_dev_mark = document.querySelectorAll(`#${animation.sample_id}_analysis .avg-dev`);
+            let main_avg_dev_mark= document.querySelector(`#${animation.sample_id}_analysis .avg-dev#arrow_main_line`);
+            let arrow_y = main_avg_dev_mark.getAttribute('y1');
+            let dist_y = distribution_element.getAttribute('cy');
+            let y_delta = parseFloat(dist_y) - parseFloat(arrow_y);
+            let x_delta = parseFloat(distribution_element.getAttribute('cx')) - parseFloat(main_avg_dev_mark.getAttribute('x2'));
+            animation.animation_controller.add({
+                targets: main_stat_mark,
+                'y1': (el) => [anime.get(el, 'y1'), parseFloat(anime.get(el, 'data-select-y'))],
+                'y2': (el) => [anime.get(el, 'y2'), parseFloat(anime.get(el, 'data-select-y'))],
+                'x1': (el) => [anime.get(el, 'x1'), parseFloat(anime.get(el, 'x1')) + parseFloat(anime.get(el, 'data-select-x-delta'))],
+                'x2': (el) => [anime.get(el, 'x2'), parseFloat(anime.get(el, 'x2')) + parseFloat(anime.get(el, 'data-select-x-delta'))],
+                'stroke': [
+                    {value: (el) => d3.color(anime.get(el, 'stroke')).toString() },
+                    {value: (el) => d3.color(anime.get(el, 'stroke')).toString() },
+                    {value: (el) => d3.color(anime.get(el, 'stroke')).toString() },
+                    {value: (el) => d3.color('black').toString() },
+                ],
+                duration: durations.distdrop_duration,  
+                easing: 'easeInQuint'
+            });
+            animation.animation_controller.add({
+                targets: avg_dev_mark,
+                'y1': (el) => [anime.get(el, 'y1'), parseFloat(anime.get(el, 'y1')) + y_delta],
+                'y2': (el) => [anime.get(el, 'y2'), parseFloat(anime.get(el, 'y2')) + y_delta],
+                'x1': (el) => [anime.get(el, 'x1'), parseFloat(anime.get(el, 'x1')) + x_delta],
+                'x2': (el) => [anime.get(el, 'x2'), parseFloat(anime.get(el, 'x2')) + x_delta],
+                'stroke-opacity': [
+                    {value: [0, 1] },
+                    {value: 1 },
+                    {value: 1 },
+                    {value: 1 },
+                ],
+                duration: durations.distdrop_duration,  
+                easing: 'easeInQuint'
+            });
+        }else if(animation.vis_options.Analysis == "Confidence Interval"){
+            let main_stat_mark = document.querySelector(`#${animation.sample_id}_analysis #analysis-ci-line`);
+            let distribution_element = animation.distributions[0];
+
+            animation.animation_controller.add({
+                targets: main_stat_mark,
+                'y1': (el) => [anime.get(el, 'y1'), parseFloat(anime.get(distribution_element, 'y1'))],
+                'y2': (el) => [anime.get(el, 'y2'), parseFloat(anime.get(distribution_element, 'y2'))],
+                'x1': (el) => [anime.get(el, 'x1'), parseFloat(anime.get(distribution_element, 'data-x1'))],
+                'x2': (el) => [anime.get(el, 'x2'), parseFloat(anime.get(distribution_element, 'data-x2'))],
+                'stroke': [
+                    {value: (el) => [d3.color(anime.get(el, 'stroke')).toString(), d3.color(anime.get(distribution_element, 'stroke')).toString()] },
+                    {value: d3.color(anime.get(distribution_element, 'stroke')).toString() },
+                    {value: d3.color(anime.get(distribution_element, 'stroke')).toString() },
+                    {value: d3.color(anime.get(distribution_element, 'stroke')).toString() },
+                ],
+                duration: durations.distdrop_duration,  
+                easing: 'easeInQuint'
+            });
+        }
+        animation.animation_controller.add({
+            targets: [animation.distributions],
+            // 'fill-opacity': [0, 1],
+            // 'stroke-opacity': [0, 1],
+            r: (el) => [0, anime.get(el, 'data-r')],
+            'x1': (el) => [anime.get(el, 'x1'), anime.get(el, 'data-x1')],
+            'x2': (el) => [anime.get(el, 'x2'), anime.get(el, 'data-x2')],
+            'fill': (el) => [d3.color(anime.get(el, 'fill')).toString(), d3.color('red').toString()],
+            duration: durations.fadein_duration,  
+            easing: 'easeOutElastic(1, 0.3)'
+        });
+    }
+    animation.animation_controller.add({
+        duration: durations.delay,
+    });
+}
+function addSampleExtrasAnimation(animation, durations){
+    if(animation.props1.length > 0){
+        animation.animation_controller.add({
+            targets: [animation.props1],
+            'fill-opacity': (el) => {return [animation.reps <= 10 ? 0 : anime.get(el, 'fill-opacity') || 1, anime.get(el, 'fill-opacity') || 1]},
+            'stroke-opacity': (el) => {return [animation.reps <= 10 ? 0 : anime.get(el, 'stroke-opacity') || 1, anime.get(el, 'stroke-opacity') || 1]},
+            duration: durations.fadein_duration,
+            easing: 'easeInOutQuad',
+        });
+    }
+    if(animation.props2.length > 0){
+        animation.animation_controller.add({
+            targets: [animation.props2],
+            'fill-opacity': (el) => {return [animation.reps <= 10 ? 0 : anime.get(el, 'fill-opacity') || 1, anime.get(el, 'fill-opacity') || 1]},
+            'stroke-opacity': (el) => {return [animation.reps <= 10 ? 0 : anime.get(el, 'stroke-opacity') || 1, anime.get(el, 'stroke-opacity') || 1]},
+            duration: durations.fadein_duration,  
+            easing: 'easeInOutQuad',
+        });
+    }
+    // animation.animation_controller.add({
+    //     targets: [animation.stats],
+    //     'fill-opacity': (el) => {return [animation.reps <= 10 ? 0 : anime.get(el, 'fill-opacity') || 1, anime.get(el, 'fill-opacity') || 1]},
+    //     'stroke-opacity': (el) => {return [animation.reps <= 10 ? 0 : anime.get(el, 'stroke-opacity') || 1, anime.get(el, 'stroke-opacity') || 1]},
+    //     duration: durations.fadein_duration,  
+    //     easing: 'easeInOutQuad',
+    // });
+    animation.animation_controller.add({
+        targets: [animation.stats],
+        'fill-opacity': (el) => {return [animation.reps <= 10 ? 0 : anime.get(el, 'fill-opacity') || 1, anime.get(el, 'fill-opacity') || 1]},
+        // 'stroke-opacity': (el) => {return [animation.reps <= 10 ? 0 : anime.get(el, 'stroke-opacity') || 1, anime.get(el, 'stroke-opacity') || 1]},
+        'stroke-width': (el) => {return [animation.reps <= 10 ? 0 : anime.get(el, 'stroke-width') || 4, anime.get(el, 'stroke-width') || 4]},
+        duration: durations.fadein_duration,  
+        easing: 'easeOutElastic(1, 0.3)',
+    });
+    animation.animation_controller.add({
+        targets: [animation.analysis],
+        'fill-opacity': (el) => {return [animation.reps <= 10 ? 0 : anime.get(el, 'fill-opacity') || 1, anime.get(el, 'fill-opacity') || 1]},
+        // 'stroke-opacity': (el) => {return [animation.reps <= 10 ? 0 : anime.get(el, 'stroke-opacity') || 1, anime.get(el, 'stroke-opacity') || 1]},
+        'stroke-width': (el) => {return [animation.reps <= 10 ? 0 : anime.get(el, 'stroke-width') || 4, anime.get(el, 'stroke-width') || 4]},
+        duration: durations.fadein_duration,  
+        easing: 'easeOutElastic(1, 0.3)',
+    });
+}
+function addSampleDropAnimation(animation, durations){
+    if(vis.module.name == "Randomisation Variation" || vis.module.name == "Randomisation Test"){
+        animation.animation_controller.add({
+            targets: animation.sample_elements,
+            'fill-opacity': [0, 1],
+            'stroke-opacity': [0, 1],
+            'fill': function(el, i){
+                let new_color = d3.color(anime.get(animation.matched_population_elements.find((pel) => pel.dataset.did == el.dataset.did), 'fill'));
+                return [animation.reps <= 10 ? new_color.toString() : d3.color('white'), animation.reps <= 10 ? new_color.toString() : d3.color('white')]
+            },
+            duration: animation.reps <= 10 ? durations.drop_duration : 1,
+
+        }, `-=${durations.fadein_duration}`);
+        animation.animation_controller.add({
+            targets: animation.sample_elements,
+            cy: function(el, i){
+                return [(animation.reps <= 10 ? animation.matched_population_elements.find((pel) => pel.dataset.did == el.dataset.did).getAttribute('cy') : vis.areas['sec1display'].split(2, 1)[1]), vis.areas['sec1display'].split(2, 1)[1]];
+            },
+            cx: function(el, i){
+                return [(animation.reps <= 10 ? animation.matched_population_elements.find((pel) => pel.dataset.did == el.dataset.did).getAttribute('cx') : el.getAttribute('cx')), el.getAttribute('cx')];
+            },
+            r: function(el, i){
+                return [(animation.reps <= 10 ? animation.matched_population_elements.find((pel) => pel.dataset.did == el.dataset.did).getAttribute('r') : el.getAttribute('r')), el.getAttribute('r')];
+            },
+            delay: animation.reps <= 10 ? anime.stagger(50) : 0,
+            duration: animation.reps <= 10 ? durations.drop_duration : 1,  
+        });
+        animation.animation_controller.add({
+            targets: animation.sample_elements,
+            'fill': function(el, i){
+                let old_color = d3.color(anime.get(animation.matched_population_elements.find((pel) => pel.dataset.did == el.dataset.did), 'fill'));
+                let new_color = d3.color('white');
+                return [animation.reps <= 10 ? old_color.toString() : new_color.toString(), new_color.toString()]
+            },
+            duration: animation.reps <= 10 ? durations.drop_duration : 1,
+        });
+        animation.animation_controller.add({
+            targets: animation.sample_elements,
+            cy: function(el, i){
+                return [(vis.areas['sec1display'].split(2, 1)[1]), el.getAttribute('data-cy')];
+            },
+            'fill': function(el, i){
+                let new_color = d3.color(anime.get(el, 'data-fill'));
+                return [d3.color('white'), new_color.toString()]
+            },
+            delay: animation.reps <= 10 ? anime.stagger(50) : 0,
+            duration: durations.drop_duration,  
+        });
+    }else{
+        animation.animation_controller.add({
+            targets: animation.sample_elements,
+            'fill-opacity': [0, 1],
+            'stroke-opacity': [0, 1],
+            'fill': function(el, i){
+                let original_color_str = anime.get(el, 'fill');
+                let new_color = null;
+                if(original_color_str == 'grey'){
+                    new_color_str = d3.color('red');
+                }else{
+                    new_color_str = d3.color(original_color_str).brighter().brighter();
+                }
+                return [new_color_str.toString(), new_color_str.toString()]
+            },
+            duration: animation.reps <= 10 ? durations.drop_duration : 1,
+
+        }, `-=${durations.fadein_duration}`);
+        animation.animation_controller.add({
+            targets: animation.sample_elements,
+            cy: function(el, i){
+                return [(animation.reps <= 10 ? animation.matched_population_elements.find((pel) => pel.dataset.did == el.dataset.did).getAttribute('cy') : el.getAttribute('cy')), el.getAttribute('cy')];
+            },
+            cx: function(el, i){
+                return [(animation.reps <= 10 ? animation.matched_population_elements.find((pel) => pel.dataset.did == el.dataset.did).getAttribute('cx') : el.getAttribute('cx')), el.getAttribute('cx')];
+            },
+            r: function(el, i){
+                return [(animation.reps <= 10 ? animation.matched_population_elements.find((pel) => pel.dataset.did == el.dataset.did).getAttribute('r') : el.getAttribute('r')), el.getAttribute('r')];
+            },
+            delay: animation.reps <= 10 ? anime.stagger(50) : 0,
+            duration: durations.drop_duration,  
+        });
+    }
 }
 function makeCIAnimation(vis, speed, tail_only, large){
     let ci_id = large ? 'large-ci' : 'ci';

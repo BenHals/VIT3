@@ -279,7 +279,7 @@ function createStatMarkersFromDataset(dataset, options, areas, bounds, domain, r
         let factor_stats = dimensions.length == 1 ? dataset.statistics.overall.point_stats : dataset.statistics.factor_2[factor_labels[f]].point_stats;
         let overall_stat = dataset.statistics.overall.point_stats[options.Statistic];
         let stat = factor_stats[options.Statistic];
-        console.log(stat);
+        // // console.log(stat);
         let screen_stat = linearScale(stat, domain, range);
 
         let main_stat_mark = document.createElementNS("http://www.w3.org/2000/svg", 'line');
@@ -353,15 +353,38 @@ function createAnalysisMarkersFromDataset(dataset, options, areas, bounds, domai
         analysis_group.insertAdjacentElement('beforeEnd', arrow_group);
     }
     if((is_population ? options.popAnalysis : options.Analysis) == "Average Deviation" || (is_population ? options.popAnalysis : options.Analysis) == "F Stat"){
+        let screen_mid_point_x = range[0] + (range[1] - range[0]) / 2;
         for(let f = 0; f < num_factors; f++){
             const factor_label = factor_labels[f];
             let factor_bounds = {left:bounds.innerLeft, right: bounds.innerRight, top:bounds.split(num_factors, f)[1], bottom: bounds.split(num_factors, f+1)[1]};
             const factor_stat = dataset.statistics.factor_2[factor_label].point_stats[options.Statistic];
             const factor_stat_screen = linearScale(factor_stat, domain, range);
+            let avg_dev_arrow_y = is_population ? bounds.top : areas['sec2display'].top + bounds.margin * f;
+            let arrow_width = Math.abs(overall_stat_screen - factor_stat_screen + (2 * Math.sign(overall_stat_screen - factor_stat_screen)));
+            let arrow_midpoint_x = Math.max(factor_stat_screen + (2 * Math.sign(overall_stat_screen - factor_stat_screen)), overall_stat_screen) - arrow_width/2;
+            let arrow_selected_x_delta = screen_mid_point_x - arrow_midpoint_x;
+            let arrow_selected_extent = [screen_mid_point_x - arrow_width / 2, screen_mid_point_x + arrow_width / 2];
             const arrow_y = factor_bounds.bottom - ((factor_bounds.bottom - factor_bounds.top)/8) * 0.5;
             const arrow_group = makeSVGArrow(factor_stat_screen + (2 * Math.sign(overall_stat_screen - factor_stat_screen)), overall_stat_screen, arrow_y, arrow_y);
+            for(let el of arrow_group.childNodes){
+                el.setAttribute('data-select-y', avg_dev_arrow_y);
+                el.setAttribute('data-select-x-delta', arrow_selected_x_delta);
+            }
             analysis_group.insertAdjacentElement('beforeEnd', arrow_group);
+
         }
+        
+        
+        let avg_dev_stat_width = linearScale(dataset.statistics.overall.analysis[options.Statistic][is_population ? options.popAnalysis : options.Analysis], [domain[0] - domain[0], domain[1] - domain[0]], range);
+        avg_dev_stat_width -= linearScale(0, [domain[0] - domain[0], domain[1] - domain[0]], range);
+        let avg_dev_arrow_extent = [screen_mid_point_x - avg_dev_stat_width / 2, screen_mid_point_x + avg_dev_stat_width / 2];
+        let avg_dev_arrow_y = is_population ? bounds.top : areas['sec2display'].top + bounds.margin * num_factors;
+        const arrow_group = makeSVGArrow(avg_dev_arrow_extent[0], avg_dev_arrow_extent[1], avg_dev_arrow_y, avg_dev_arrow_y);
+        for(let el of arrow_group.childNodes){
+            el.style.strokeOpacity = 0;
+            el.classList.add('avg-dev');
+        }
+        analysis_group.insertAdjacentElement('beforeEnd', arrow_group);
 
     }
     if(!is_population && (is_population ? options.popAnalysis : options.Analysis) == "Confidence Interval"){
@@ -404,7 +427,7 @@ function createSampleGhosts(all_samples, options, areas, bounds, domain, range, 
             let factor_stats = dimensions.length == 1 ? dataset.statistics.overall.point_stats : dataset.statistics.factor_2[factor_labels[f]].point_stats;
             let overall_stat = dataset.statistics.overall.point_stats[options.Statistic];
             let stat = factor_stats[options.Statistic];
-            console.log(stat);
+            // // console.log(stat);
             let screen_stat = linearScale(stat, domain, range);
             
             let main_stat_mark = document.createElementNS("http://www.w3.org/2000/svg", 'line');
@@ -763,8 +786,8 @@ function elementsFromDataset(dataset, dimensions, bounds, options){
             el.value = datapoint[dimensions[0].name];
             elements.all.push(el);
             if(!elements.factors[y_factor_index]){
-                console.log(y_factor_index);
-                console.log(y_factor);
+               // // console.log(y_factor_index);
+                // console.log(y_factor);
             }
             elements.factors[y_factor_index].push(el);
             
@@ -919,7 +942,7 @@ function statisticsFromElements(elements, dimensions, bounds, options, dataset, 
             let factor_bounds = {left:bounds.innerLeft, right: bounds.innerRight, top:bounds.split(num_factors, f)[1], bottom: bounds.split(num_factors, f+1)[1]};
             let factor = elements.factors[f];
             let stat = factor.statistics[statistic];
-            console.log(stat);
+            // console.log(stat);
             let screen_stat = linearScale(stat, [min_x, max_x], [factor_bounds.left, factor_bounds.right]);
             let median = linearScale(factor.statistics['Median'], [min_x, max_x], [factor_bounds.left, factor_bounds.right]);
             let lq = linearScale(factor.statistics['lq'], [min_x, max_x], [factor_bounds.left, factor_bounds.right]);
@@ -1015,7 +1038,7 @@ function statisticsFromElements(elements, dimensions, bounds, options, dataset, 
             let factor_bounds = {left:bounds.innerLeft, right: bounds.innerRight, top:bounds.split(num_factors, f)[1], bottom: bounds.split(num_factors, f+1)[1]};
             let factor = elements.factors[f];
             let stat = factor.statistics[statistic];
-            console.log(stat);
+            // console.log(stat);
             let screen_stat = linearScale(stat, [0, 1], [factor_bounds.left, factor_bounds.right]);
             let el = new visElement('factor'+f+statistic, 'line');
             el.setAttrInit('x1', screen_stat);
@@ -1053,9 +1076,9 @@ function statisticsFromElements(elements, dimensions, bounds, options, dataset, 
         }
     }
     if(statistic == "Average Deviation" || statistic == "F Stat"){
-        console.log(statistic + elements.all.statistics[statistic]);
+        // console.log(statistic + elements.all.statistics[statistic]);
         let pop_stat = elements.all.statistics["Mean"] ? "Mean" : "proportion";
-        console.log("Mean" + elements.all.statistics[pop_stat]);
+        // console.log("Mean" + elements.all.statistics[pop_stat]);
         
         let max_x = max == undefined ? elements.all.reduce((a, c)=> c.attrs[dimensions[0].name] > a ? c.attrs[dimensions[0].name] : a, -100000) : max;
         let min_x = min == undefined ? elements.all.reduce((a, c)=> c.attrs[dimensions[0].name] < a ? c.attrs[dimensions[0].name] : a, 1000000) : min;
@@ -1064,7 +1087,7 @@ function statisticsFromElements(elements, dimensions, bounds, options, dataset, 
             let factor_bounds = {left:bounds.innerLeft, right: bounds.innerRight, top:bounds.split(num_factors, f)[1], bottom: bounds.split(num_factors, f+1)[1]};
             let factor = elements.factors[f];
             let stat = factor.statistics[pop_stat];
-            console.log(stat);
+            // console.log(stat);
             let screen_stat = linearScale(stat, [min_x, max_x], [factor_bounds.left, factor_bounds.right]);
             let el = new visElement('factor'+f+statistic, 'line');
             el.setAttrInit('x1', screen_stat);
@@ -1083,7 +1106,7 @@ function statisticsFromElements(elements, dimensions, bounds, options, dataset, 
             new_elements.push(el_diff);
 
         }
-        console.log(overall_stat);
+        // console.log(overall_stat);
         let screen_stat = linearScale(overall_stat, [min_x, max_x], [bounds.innerLeft, bounds.innerRight]);
         let el = new visElement('overall'+statistic, 'line');
         el.setAttrInit('x1', screen_stat);
@@ -1257,7 +1280,7 @@ function statisticsFromDistribution(distribution_item, dataset, dimensions, boun
         el.setAttrInit('y1', y1);
         el.setAttrInit('x2', x2);
         el.setAttrInit('y2', y2);
-        if(s_i == 4)console.log('stat', slope, min, max, bounds.bottom, bounds.top);
+        if(s_i == 4)// console.log('stat', slope, min, max, bounds.bottom, bounds.top);
         el.value = slope;
         new_elements.push(el);
 
@@ -1359,7 +1382,7 @@ function placeElements(elements, dimensions, bounds, options, min, max){
         if(dimensions[0].type == 'numeric'){
             if(dimensions.length < 2 || dimensions[1].type == 'categoric'){
                 heap(elements.factors[f], factor_bounds, min_x, max_x);
-                console.log(elements);
+                // console.log(elements);
             }else if(dimensions[1].type == 'numeric'){
                 let pop_elements = vis.staticElements || elements;
                 let max_y = pop_elements.all.reduce((a, c)=> c.attrs[dimensions[1].name] > a ? c.attrs[dimensions[1].name] : a, -100000);
@@ -1447,7 +1470,7 @@ function placeElements(elements, dimensions, bounds, options, min, max){
             }
 
 
-            console.log(sum);
+            // console.log(sum);
         }
         
     }
@@ -1655,7 +1678,7 @@ function heap(elements, bounds, min, max, vertical, base_margin){
             }else{
                 buckets[b][e].setAttrInit('y', linearScale(buckets[b][e].value, [min_v, max_v], screen_range))
                 buckets[b][e].setAttrInit('x', bounds.left + base_margin_value  + spacePerElement * e )
-                if(buckets[b][e].id == 4) console.log('point', buckets[b][e].value, min_v, max_v, screen_range[0], screen_range[1]);
+                //if(buckets[b][e].id == 4) // console.log('point', buckets[b][e].value, min_v, max_v, screen_range[0], screen_range[1]);
             }
 
         }

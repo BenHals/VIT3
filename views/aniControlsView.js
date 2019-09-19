@@ -507,7 +507,7 @@ function ac_updateProgress(p){
   if(loading_done) return;
   document.querySelector('#takeSamplesProgress').style.display = null;
   document.querySelector('#takeSamplesProgress').style.width =  `${p*100}%`;
-  console.log('progress', p, document.querySelector('#takeSamplesProgress').style.width);
+  // console.log('progress', p, document.querySelector('#takeSamplesProgress').style.width);
   document.querySelector('#visControls').style.display = 'none';
 }
 

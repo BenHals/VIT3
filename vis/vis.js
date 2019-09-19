@@ -65,7 +65,7 @@ const vis = {
         // this.drawDynamic();
     },
     initSample: function(sample_id){
-        console.log(sample_id);
+        // console.log(sample_id);
         clearSvg('dynamicSVG');
         this.hideCI();
         this.showSampleGhost(sample_id);
@@ -118,7 +118,7 @@ const vis = {
         createAxis(scale, this.areas[`${area}axis`], dimensions, `${name}_axis`, svg, false)
     },
     showSampleGhost: function(sample_id){
-        console.log(sample_id);
+        // console.log(sample_id);
         let sample_ghost_container = document.querySelector(`#sample-${sample_id}-ghosts`);
         let sample_ghosts = sample_ghost_container.querySelectorAll('*');
         for(ghost of sample_ghosts){
@@ -133,7 +133,7 @@ const vis = {
         }
     },
     hideSampleGhost: function(sample_id){
-        console.log(sample_id);
+        // console.log(sample_id);
         let sample_ghost_container = document.querySelector(`#sample-${sample_id}-ghosts`);
         let sample_ghosts = sample_ghost_container.querySelectorAll('*');
         for(ghost of sample_ghosts){
@@ -381,8 +381,8 @@ const vis = {
         let stage_not_done = true;
         if(!this.paused){
             this.current_animation_percent += (ts-this.last_frame) / this.animation.total_duration;
-            if(this.current_animation_percent < 0) console.log(this.last_frame);
-            console.log(this.current_animation_percent);
+            // if(this.current_animation_percent < 0) // console.log(this.last_frame);
+            // console.log(this.current_animation_percent);
             stage_not_done = this.setProgress(this.current_animation_percent);
             
         }
