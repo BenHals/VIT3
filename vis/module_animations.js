@@ -133,7 +133,7 @@ function makeBaseAnimation(vis, speed, reps){
                     duration: durations.drop_duration,  
                 });
             }
-            if(this.props1){
+            if(this.props1.length > 0){
                 this.animation_controller.add({
                     targets: [this.props1],
                     'fill-opacity': (el) => {return [reps <= 10 ? 0 : 1, anime.get(el, 'fill-opacity') || 1]},
@@ -141,7 +141,7 @@ function makeBaseAnimation(vis, speed, reps){
                     duration: durations.fadein_duration,  
                 });
             }
-            if(this.props2){
+            if(this.props2 > 0){
                 this.animation_controller.add({
                     targets: [this.props2],
                     'fill-opacity': (el) => {return [reps <= 10 ? 0 : 1, anime.get(el, 'fill-opacity') || 1]},
