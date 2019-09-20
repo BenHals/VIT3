@@ -1,10 +1,10 @@
 
 function makeBaseAnimation(vis, speed, reps){
     let durations = {
-        "fadein_duration": 4000 / speed,
-        "drop_duration": 4000 / speed,
-        "distdrop_duration": 6000 / speed,
-        "delay": 2000 / speed,
+        "fadein_duration": 2000 / speed,
+        "drop_duration": 2000 / speed,
+        "distdrop_duration": 3000 / speed,
+        "delay": 1000 / speed,
     }
     let animation = {
         total_duration: Object.keys(durations).map((k) => durations[k]).reduce((a, b) => a + b, 0),
@@ -51,6 +51,8 @@ function makeBaseAnimation(vis, speed, reps){
             addSampleExtrasAnimation(this, durations);
             addDistDropAnimation(this, durations);
 
+            this.total_duration = this.animation_controller.duration;
+
         },
         percentUpdate: function(p){
             this.animation_controller.seek(p * this.animation_controller.duration);
@@ -69,7 +71,7 @@ function makeBaseAnimation(vis, speed, reps){
             }
         }
     }
-    this.total_duration = animation.duration;
+    
     return animation;
 }
 
@@ -349,17 +351,125 @@ function makeCIAnimation(vis, speed, tail_only, large){
         start: function(){
             vis.hideCI();
             let ci = document.querySelectorAll(ci_selector);
+            for(let e of ci){
+                e.setAttribute('data-y1', e.getAttribute('y1'));
+                e.setAttribute('data-y2', e.getAttribute('y2'));
+                e.setAttribute('data-x1', e.getAttribute('x1'));
+                e.setAttribute('data-x2', e.getAttribute('x2'));
+            }
+            this.dist_datapoints = document.querySelectorAll('#distribution-container .distribution');
+            this.ci_top_bar = document.querySelector('#tops2-ci-arrow');
+            this.ci_main_bar = document.querySelector('#top-ci-arrow');
+            this.selected_elements = [];
             for(g of ci){
                 if (option_ci_elements[vis.options.Analysis].includes(g.id)){
+                    this.selected_elements.push(g);
                     g.style.display = null;
+                    g.style.strokeOpacity = 0;
+                    g.style.fillOpacity = 0;
                 }
             }
+            this.animation_controller = anime.timeline({
+                // duration: this.total_duration,
+                autoplay: false,
+                // easing: this.total_duration < 1000 ? 'linear' : `easeOutElastic(${linearScale(reps, [1, 5], [1, 2])}, 0.6)`
+                easing: `easeOutElastic(${1}, ${linearScale(1, [1, 5], [0.6, 1.2])})`
+                
+            });
+            let dist_faded = false;
+            if(this.selected_elements.includes(this.ci_main_bar)){
+                this.animation_controller.add({
+                    targets: this.dist_datapoints,
+                    'stroke-opacity': (el) => [anime.get(el, 'stroke-opacity'), el.dataset.inci == 'true' ? 0.8 : 0.2],
+                    'fill-opacity': (el) => [anime.get(el, 'fill-opacity'), el.dataset.inci == 'true' ? 0.8 : 0.2],
+                    duration: 2000,
+                    easing: 'linear',
+                });
+                dist_faded = true;
+                
+                this.animation_controller.add({
+                    targets: this.selected_elements.filter(e => !e.matches(`#pop-${ci_id}-arrow, #arrow_main_line, #arrow_arm_1, #arrow_arm_2, #pop-${ci_id}-text, #tail-${ci_id}-text`)),
+                    'stroke-opacity': [0, 1],
+                    'fill-opacity': [0, 1],
+                    duration: 1000,
+                    easing: 'linear',
+                });
+                this.animation_controller.add({
+                    targets: this.selected_elements.filter(e => e.matches('line')),
+                    'stroke': (el) => [anime.get(el, 'stroke'), d3.color('red').toString()],
+                    duration: 1000,
+                    easing: 'linear',
+                });
+                if(this.selected_elements.includes(this.ci_top_bar)){
+                    this.animation_controller.add({
+                        targets: this.selected_elements.filter(e => !e.matches(`#pop-${ci_id}-arrow, #arrow_main_line, #arrow_arm_1, #arrow_arm_2, #pop-${ci_id}-text, #tail-${ci_id}-text`)).filter(e => e.matches('line')),
+                        'y1': (el) => [anime.get(this.ci_main_bar, 'y1'), anime.get(el, 'y1')],
+                        'y2': (el) => [anime.get(this.ci_main_bar, 'y2'), anime.get(el, 'y2')],
+                        duration: 1000,
+                    });    
+                }
+            }
+            let pop_arrow = this.selected_elements.filter(e => e.matches(`#pop-${ci_id}-arrow, #arrow_main_line, #arrow_arm_1, #arrow_arm_2, #pop-${ci_id}-text, #tail-${ci_id}-text`));
+            if(pop_arrow.length > 0){
+
+                // We want to start the animation from the population analysis arrow.
+                // This is the last arrow drawn in its container.
+                let population_match = document.querySelectorAll('#population_analysis #arrow_main_line');
+                population_match = population_match[population_match.length - 1];
+                let arrow_main = pop_arrow.filter(e=>e.matches('#arrow_main_line'))[0];
+
+                // Calculate deltas to overlay arrows
+                let y_delta = parseFloat(population_match.getAttribute('y2')) - parseFloat(arrow_main.getAttribute('y2'));
+                let x_delta = parseFloat(population_match.getAttribute('x2')) - parseFloat(arrow_main.getAttribute('x2'));
+                this.animation_controller.add({
+                    targets: pop_arrow.filter(e => e.matches(`#arrow_main_line, #arrow_arm_1, #arrow_arm_2`)),
+                    'stroke-opacity': [0, 1],
+                    duration: 1000,
+                    easing: 'easeInOutQuad'
+                });
+                this.animation_controller.add({
+                    targets: pop_arrow.filter(e => e.matches(`#arrow_main_line, #arrow_arm_1, #arrow_arm_2`)),
+                    'y1': (el) => [parseFloat(anime.get(el, 'y1')) + y_delta,  anime.get(el, 'y1')],
+                    'y2': (el) => [parseFloat(anime.get(el, 'y2')) + y_delta,  anime.get(el, 'y2')],
+                    'x1': (el) => [parseFloat(anime.get(el, 'x1')) + x_delta,  anime.get(el, 'x1')],
+                    'x2': (el) => [parseFloat(anime.get(el, 'x2')) + x_delta, (el) => anime.get(el, 'x2')],
+                    duration: 2000,
+                    easing: 'easeInQuint'
+                });
+                this.animation_controller.add({
+                    targets: pop_arrow.filter(e => e.matches(`#pop-${ci_id}-arrow, #pop-${ci_id}-text, #tail-${ci_id}-text`)),
+                    'stroke-opacity': [0, 1],
+                    'fill-opacity': [0, 1],
+                    'y2': (el) => [anime.get(el, 'y1'),  anime.get(el, 'y2')],
+                    'stroke': (el) => [anime.get(el, 'stroke'), el.matches('line') ? d3.color('red').toString(): anime.get(el, 'stroke')],
+                    duration: 750,
+                    easing: 'easeOutElastic(1, 0.3)',
+                }, '-=10');
+                if(!dist_faded){
+                    this.animation_controller.add({
+                        targets: this.dist_datapoints,
+                        'stroke-opacity': (el) => [anime.get(el, 'stroke-opacity'), el.dataset.inci == 'true' ? 0.8 : 0.2],
+                        'fill-opacity': (el) => [anime.get(el, 'fill-opacity'), el.dataset.inci == 'true' ? 0.8 : 0.2],
+                        duration: 1000,
+                        easing: 'linear',
+                    }, '-=500');
+                }
+            }
+            this.total_duration = this.animation_controller.duration;
         },
         percentUpdate: function(p){
+            this.animation_controller.seek(p * this.animation_controller.duration);
             return p >= 1;
         },
         remove: function(){
-            
+            this.animation_controller.seek(0);
+            let ci = document.querySelectorAll(ci_selector);
+            for(let e of ci){
+                e.setAttribute('y1', e.getAttribute('data-y1'));
+                e.setAttribute('y2', e.getAttribute('data-y2'));
+                e.setAttribute('x1', e.getAttribute('data-x1'));
+                e.setAttribute('x2', e.getAttribute('data-x2'));
+            }
         }
     }
     return animation;
