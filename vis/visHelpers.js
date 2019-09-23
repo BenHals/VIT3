@@ -476,7 +476,7 @@ function createDistribution(distribution, options, areas, bounds, domain, range,
             distrubution_group.id = `distribution-${p}`;
             distribution_container.insertAdjacentElement('beforeend', distrubution_group);
             item.style.display = 'none';
-            if (in_ci) item.style.fill = 'green';
+            // if (in_ci) item.style.fill = 'green';
             item.setAttribute('data-inci', in_ci);
             distrubution_group.insertAdjacentElement('beforeend', item);
             i++;

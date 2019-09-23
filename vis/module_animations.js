@@ -405,8 +405,11 @@ function makeCIAnimation(vis, speed, tail_only, large){
                     targets: this.dist_datapoints,
                     'stroke-opacity': (el) => [anime.get(el, 'stroke-opacity'), el.dataset.inci == 'true' ? 0.8 : 0.2],
                     'fill-opacity': (el) => [anime.get(el, 'fill-opacity'), el.dataset.inci == 'true' ? 0.8 : 0.2],
-                    duration: 2000,
-                    easing: 'linear',
+                    'r': (el) => [el.getAttribute('r'), el.dataset.inci == 'true' ? el.getAttribute('r') : el.getAttribute('r') * 0.8],
+                    "fill": (el) => [d3.color('grey').toString(), el.dataset.inci == 'true' ? d3.color('green').toString() : d3.color('grey').toString()],
+                    duration: 200,
+                    delay: anime.stagger(5),
+                    easing: 'easeOutElastic(1, 0.3)',
                 });
                 dist_faded = true;
                 
