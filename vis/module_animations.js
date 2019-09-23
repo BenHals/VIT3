@@ -338,8 +338,8 @@ function addSampleDropAnimation(animation, durations){
         }else{
             animation.animation_controller.add({
                 targets: animation.sample_elements,
-                'fill-opacity': [0, 1],
-                'stroke-opacity': [0, 1],
+                'fill-opacity': [1, 1],
+                'stroke-opacity': [1, 1],
                 'fill': function(el, i){
                     let original_color_str = anime.get(el, 'fill');
                     let new_color = null;
@@ -350,6 +350,8 @@ function addSampleDropAnimation(animation, durations){
                     }
                     return [new_color_str.toString(), new_color_str.toString()]
                 },
+                r: (el) => [0, el.getAttribute('r')],
+                easing: 'easeOutElastic(1, 0.3)',
                 duration: durations.fadein_duration,
                 delay: anime.stagger(50),
     
