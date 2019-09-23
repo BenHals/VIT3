@@ -203,7 +203,7 @@ function addDistDropAnimation(animation, durations){
             'x1': (el) => [anime.get(el, 'x1'), anime.get(el, 'data-x1')],
             'x2': (el) => [anime.get(el, 'x2'), anime.get(el, 'data-x2')],
             'fill': (el) => [d3.color(anime.get(el, 'fill')).toString(), d3.color('red').toString()],
-            duration: durations.fadein_duration,  
+            duration: durations.fadein_duration, 
             easing: 'easeOutElastic(1, 0.3)'
         });
     }
@@ -303,37 +303,58 @@ function addSampleDropAnimation(animation, durations){
             duration: durations.drop_duration,  
         });
     }else{
-        animation.animation_controller.add({
-            targets: animation.sample_elements,
-            'fill-opacity': [0, 1],
-            'stroke-opacity': [0, 1],
-            'fill': function(el, i){
-                let original_color_str = anime.get(el, 'fill');
-                let new_color = null;
-                if(original_color_str == 'grey'){
-                    new_color_str = d3.color('red');
-                }else{
-                    new_color_str = d3.color(original_color_str).brighter().brighter();
-                }
-                return [new_color_str.toString(), new_color_str.toString()]
-            },
-            duration: animation.reps <= 10 ? durations.drop_duration : 1,
-
-        }, `-=${durations.fadein_duration}`);
-        animation.animation_controller.add({
-            targets: animation.sample_elements,
-            cy: function(el, i){
-                return [(animation.reps <= 10 ? animation.matched_population_elements.find((pel) => pel.dataset.did == el.dataset.did).getAttribute('cy') : el.getAttribute('cy')), el.getAttribute('cy')];
-            },
-            cx: function(el, i){
-                return [(animation.reps <= 10 ? animation.matched_population_elements.find((pel) => pel.dataset.did == el.dataset.did).getAttribute('cx') : el.getAttribute('cx')), el.getAttribute('cx')];
-            },
-            r: function(el, i){
-                return [(animation.reps <= 10 ? animation.matched_population_elements.find((pel) => pel.dataset.did == el.dataset.did).getAttribute('r') : el.getAttribute('r')), el.getAttribute('r')];
-            },
-            delay: animation.reps <= 10 ? anime.stagger(50) : 0,
-            duration: durations.drop_duration,  
-        });
+        if(animation.reps <= 10){
+            animation.animation_controller.add({
+                targets: animation.sample_elements,
+                'fill-opacity': [0, 1],
+                'stroke-opacity': [0, 1],
+                'fill': function(el, i){
+                    let original_color_str = anime.get(el, 'fill');
+                    let new_color = null;
+                    if(original_color_str == 'grey'){
+                        new_color_str = d3.color('red');
+                    }else{
+                        new_color_str = d3.color(original_color_str).brighter().brighter();
+                    }
+                    return [new_color_str.toString(), new_color_str.toString()]
+                },
+                duration: animation.reps <= 10 ? durations.drop_duration : 1,
+    
+            }, `-=${durations.fadein_duration}`);
+            animation.animation_controller.add({
+                targets: animation.sample_elements,
+                cy: function(el, i){
+                    return [(animation.reps <= 10 ? animation.matched_population_elements.find((pel) => pel.dataset.did == el.dataset.did).getAttribute('cy') : el.getAttribute('cy')), el.getAttribute('cy')];
+                },
+                cx: function(el, i){
+                    return [(animation.reps <= 10 ? animation.matched_population_elements.find((pel) => pel.dataset.did == el.dataset.did).getAttribute('cx') : el.getAttribute('cx')), el.getAttribute('cx')];
+                },
+                r: function(el, i){
+                    return [(animation.reps <= 10 ? animation.matched_population_elements.find((pel) => pel.dataset.did == el.dataset.did).getAttribute('r') : el.getAttribute('r')), el.getAttribute('r')];
+                },
+                delay: animation.reps <= 10 ? anime.stagger(50) : 0,
+                duration: durations.drop_duration,  
+            });
+        }else{
+            animation.animation_controller.add({
+                targets: animation.sample_elements,
+                'fill-opacity': [0, 1],
+                'stroke-opacity': [0, 1],
+                'fill': function(el, i){
+                    let original_color_str = anime.get(el, 'fill');
+                    let new_color = null;
+                    if(original_color_str == 'grey'){
+                        new_color_str = d3.color('red');
+                    }else{
+                        new_color_str = d3.color(original_color_str).brighter().brighter();
+                    }
+                    return [new_color_str.toString(), new_color_str.toString()]
+                },
+                duration: durations.fadein_duration,
+                delay: anime.stagger(50),
+    
+            }, 0);
+        }
     }
 }
 function makeCIAnimation(vis, speed, tail_only, large){
