@@ -353,7 +353,8 @@ function addSampleDropAnimation(animation, durations){
                 r: (el) => [0, el.getAttribute('r')],
                 easing: 'easeOutElastic(1, 0.3)',
                 duration: durations.fadein_duration,
-                delay: anime.stagger(50),
+                // Fade in to match population fade in, since there may be different #elements, we need to normalize
+                delay: anime.stagger(50 * (  animation.matched_population_elements.length / animation.sample_elements.length )),
     
             }, 0);
         }
